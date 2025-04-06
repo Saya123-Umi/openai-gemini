@@ -1,5 +1,184 @@
 import { Buffer } from "node:buffer";
 
+// 添加API密钥库配置
+// 从环境变量读取API密钥，格式为逗号分隔的密钥列表
+// 例如: GEMINI_API_KEYS=key1,key2,key3
+const API_KEYS = (function() {
+  // 预设的密钥列表
+  const predefinedKeys = [
+    "AIzaSyCa5yUPn2Miz4ehq3Ak7USy7pR7INbd1D4",
+    "AIzaSyBFBF6tCLj1ylVUNe05DU2ZB010z15J5rs",
+    "AIzaSyCgk-aTLlS3mwK9zhb9tceyvn3eNXaV9YQ",
+    "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
+    "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
+    "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
+    "AIzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
+    "AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
+    "AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
+    "AIzaSyB95dY2-qkDpy7PC5fe-jD1wNzF5vKXOGc",
+    "AIzaSyBSiRXbuYwRr2T9zqu4MghU4DEufbr_ZQY",
+    "AIzaSyCUDVUsHamubnX_mn2HM_ovWL-EXRWBfmc",
+    "AIzaSyDFfp9igiphlpqiNDDruGocouBd63B4plE",
+    "AIzaSyA3xz02P78Md_sp9P8hgUV6rnD8V5wHl_I",
+    "AIzaSyAtpQKfg2_GNITxejmMo82BxDL-0QReanY",
+    "AIzaSyAF3zEc8On49CzdL_Gz2pmasP2DuYAepcM",
+    "AIzaSyBSOecsMHZdSIM7aHY3XNAfspJ0zbSEDtk",
+    "AIzaSyDBDupYyFZHtt4Es2Pijk6q0tAnTWRjxOY",
+    "AIzaSyCL5KBat0QfW7jd1bltB3_NsNKfhLZJezQ",
+    "AIzaSyBcx4xPYAmmd-pBkiaUoILlO3Sheu9TFlY",
+    "AIzaSyDhg7avSE295pVl7UM7nAWUUqiAgwFrwFc",
+    "AIzaSyBTTjWPuQM13zCbMR10qO1SpRBjrZLcoMw",
+    "AIzaSyBj-B5C-SJtA3ykqAP_U9l5TAsD4WUuprY",
+    "AIzaSyAlVQtRKyZwCXeCfjwLXvYkiWo3Ly_pXuM",
+    "AIzaSyB6wfHWsPrJbtP9-UkU0DDC2K2nxkTojlk",
+    "AIzaSyDLje4YehvPkncvBDLmcICnYIuIbQD16fA",
+    "AIzaSyByglEVo4_mzmUZAG0HZZYAa3tlxv5L6pU",
+    "AIzaSyArueFajIY63zciUnkioJbd8zcxkSUeZbU",
+    "AIzaSyCu4W4T_R-7n7tN8jfMoHRJWrrwk6bVn9w",
+    "AIzaSyCfNKkuIBoVkl6mf0IOzyRaSi09sDxrdSk",
+    "AIzaSyCnTdvWTrNk7n28Q-LwZmBZBgHCpDhJ58o",
+    "AIzaSyDpxsQvpqN5s9HQpL6zNTMygBW_4tP5DsY",
+    "AIzaSyDZvYljhrBE-fN7ceWaFqErAXzfyjqOIeU",
+    "AIzaSyAkYvj4ukmvzo9ukqeHAybbozRUZuIaJjc",
+    "AIzaSyDWtSq8If5UIEC7D2uA7sCkZhFchZ-hfjo",
+    "AIzaSyDubRMgg3eUK_XRzQVTp8k_UUZSKJimS9s",
+    "AIzaSyArxFRnyD9cV-qkXSDk7Buh5fkhgMCKIXE",
+    "AIzaSyALaly28nOiUEXEd0H7Vs2m26dnzCvl6zU",
+    "AIzaSyASlN_5kJvNXYto5BXTDvJRRvWpt_dhBW0",
+    "AIzaSyDW1SVoXipuP7_szC2phk5LGThplNNHss8",
+    "AIzaSyCqL5PUZFa7krmdkEfWbC7a9_EB3oIq6kg",
+    "AIzaSyBK-kNydXldsryLlRwKHUYlKAbMElAt64Y",
+    "AIzaSyBwycmu4Jzlqjww2gmb3VkinPX3yq3KkSA",
+    "AIzaSyALhA40vulZZFYxmLMDH3lpVwRs3OhcVJc",
+    "AIzaSyB6EKR-3HRDP1CYbolE65bYLBmDnhSvCJ8",
+    "AIzaSyAGYwccjYZviC2yP3KlTI6C-mQDE4jWr9o",
+    "AIzaSyBk0gBdR12O_7nrZnSUfEKdq-X0_ZrM8lA",
+    "AIzaSyCLZ4xiFZtaNB8O2yiz-1nc3YiIC6Jr_V0",
+    "AIzaSyDa1a2hAfvYQzvqGCH6Nk8qTMCk3O2aCls",
+    "AIzaSyA6eiiLjxXKuH3S750cmV5Gt5GcEkLmbQ8",
+    "AIzaSyDB5lc55kkDEh7nhGRFnHy-xPeffiENFd0",
+    "AIzaSyDeEXtAG4qOV9z20GgDnYRREWPnAMtjlW8",
+    "AIzaSyBpTgfUuODNgYKVbgtGxqCiAjd8lTtnsgI",
+    "AIzaSyB8akwchatPzc8OG6JBd7kh-5MF798Maj4",
+    "AIzaSyBLkqtK3JWIpBtDhztylwgquRFkXABRpnE",
+    "AIzaSyDrEkwdLhI0MRPN6dsjF4mJrhBReU32k8A",
+    "AIzaSyDRVJGGv6hpYEItzTpiUW31ym7xM4Nj9qE",
+    "AIzaSyAjmCaL-HItCJYRQi7KdzzbU4wHt0UgHHI",
+    "AIzaSyCE1-Ut41Wmgip49sy4opm4s6HunbOXVzk",
+    "AIzaSyCYlmI4u6zb02g2JOMgSIKHZZMU2jOrV8c",
+    "AIzaSyAS_gpGU0InGtwswGtcMnydHORG43cgl5Q",
+    "AIzaSyB2zdEIwMUI7c7LQYrQYD-rKxXzgi7u_-I",
+    "AIzaSyBvAU1Xy6-PkxzgfIHhxhGH9v3orzxa6PU",
+    "AIzaSyBhalgCaFwcubvI-B-YvIugpUgmddjpbYQ",
+    "AIzaSyCTy_AjF1i3oOe3OsQyifw-M-dbMJF4XtQ",
+    "AIzaSyCnVG19hbVR9CJuBV0Y3_a2cLo6oxw9oTM"
+  ];
+
+  // 尝试获取环境变量
+  const envKeys = typeof process !== 'undefined' && process.env ? 
+                  process.env.GEMINI_API_KEYS : 
+                  (typeof Deno !== 'undefined' ? Deno.env.get('GEMINI_API_KEYS') : null);
+                  
+  // 合并预设密钥和环境变量中的密钥
+  const envKeyArray = envKeys ? 
+    envKeys.split(',').map(k => k.trim()).filter(k => k) : 
+    [];
+  
+  // 返回所有密钥的去重数组
+  return [...new Set([...predefinedKeys, ...envKeyArray])];
+})();
+
+console.log(`Loaded ${API_KEYS.length} API keys from predefined keys and environment`);
+
+// 密钥轮询计数器
+let keyIndex = 0;
+
+// 内存中的运行时密钥集合，用于动态添加的密钥
+const RUNTIME_KEYS = new Set(API_KEYS);
+
+// 上次密钥切换时间
+let lastKeyRotationTime = Date.now();
+
+// 密钥轮询间隔（毫秒），修改为每10秒切换一次
+const KEY_ROTATION_INTERVAL = 10 * 1000; // 10秒
+
+// 获取下一个密钥的函数
+function getNextApiKey(providedKey, forceRotate = false) {
+  // 检查是否需要自动切换密钥（每分钟执行一次）
+  const now = Date.now();
+  if (now - lastKeyRotationTime > KEY_ROTATION_INTERVAL) {
+    // 更新最后切换时间
+    lastKeyRotationTime = now;
+    // 强制轮询到下一个密钥
+    forceRotate = true;
+  }
+
+  // 如果提供了密钥且不是特殊的"rotate"标记，并且不需要强制轮询，则使用提供的密钥
+  if (providedKey && providedKey !== "rotate" && !forceRotate) {
+    return providedKey;
+  }
+  
+  // 将运行时密钥转换为数组
+  const keyArray = Array.from(RUNTIME_KEYS);
+  
+  // 如果密钥库为空，返回null
+  if (keyArray.length === 0) {
+    return null;
+  }
+  
+  // 轮询选择下一个密钥
+  const key = keyArray[keyIndex];
+  keyIndex = (keyIndex + 1) % keyArray.length;
+  
+  console.log(`Rotating to API key ${keyIndex}/${keyArray.length} (${key.substring(0, 5)}...${key.substring(key.length - 4)})`);
+  
+  return key;
+}
+
+// 管理密钥的函数
+async function handleKeyManagement(request, adminKey) {
+  // 检查管理密钥
+  const auth = request.headers.get("X-Admin-Key");
+  if (!auth || auth !== adminKey) {
+    throw new HttpError("Unauthorized. Admin key required.", 401);
+  }
+  
+  // 根据请求方法执行不同操作
+  switch (request.method) {
+    case "GET":
+      // 返回所有密钥（注意：实际生产环境中应该隐藏完整密钥）
+      return new Response(JSON.stringify({
+        count: RUNTIME_KEYS.size,
+        keys: Array.from(RUNTIME_KEYS).map(k => k.substring(0, 5) + "..." + k.substring(k.length - 4))
+      }, null, 2), fixCors({ status: 200, headers: { "Content-Type": "application/json" } }));
+      
+    case "POST":
+      // 添加新密钥
+      const { key } = await request.json();
+      if (!key) {
+        throw new HttpError("Missing key in request body", 400);
+      }
+      RUNTIME_KEYS.add(key);
+      return new Response(JSON.stringify({ message: "Key added", count: RUNTIME_KEYS.size }), 
+        fixCors({ status: 200, headers: { "Content-Type": "application/json" } }));
+        
+    case "DELETE":
+      // 删除密钥
+      const { key: keyToDelete } = await request.json();
+      if (!keyToDelete) {
+        throw new HttpError("Missing key in request body", 400);
+      }
+      const deleted = RUNTIME_KEYS.delete(keyToDelete);
+      return new Response(JSON.stringify({ 
+        message: deleted ? "Key deleted" : "Key not found", 
+        count: RUNTIME_KEYS.size 
+      }), fixCors({ status: deleted ? 200 : 404, headers: { "Content-Type": "application/json" } }));
+      
+    default:
+      throw new HttpError("Method not allowed", 405);
+  }
+}
+
 export default {
   async fetch (request) {
     if (request.method === "OPTIONS") {
@@ -10,14 +189,37 @@ export default {
       return new Response(err.message, fixCors({ status: err.status ?? 500 }));
     };
     try {
+      const { pathname } = new URL(request.url);
+      
+      // 添加密钥管理端点
+      if (pathname.endsWith("/admin/keys")) {
+        const adminKey = typeof process !== 'undefined' && process.env ? 
+                  process.env.ADMIN_KEY : 
+                  (typeof Deno !== 'undefined' ? Deno.env.get('ADMIN_KEY') : null);
+        
+        if (!adminKey) {
+          throw new HttpError("Admin key not configured on server", 500);
+        }
+        
+        return handleKeyManagement(request, adminKey)
+          .catch(errHandler);
+      }
+      
       const auth = request.headers.get("Authorization");
-      const apiKey = auth?.split(" ")[1];
+      const providedKey = auth?.split(" ")[1];
+      // 使用轮询获取API密钥
+      const apiKey = getNextApiKey(providedKey);
+      
+      // 如果没有可用的密钥，返回错误
+      if (!apiKey) {
+        throw new HttpError("API key is required. Either provide a key in Authorization header or configure API_KEYS in the server.", 401);
+      }
+      
       const assert = (success) => {
         if (!success) {
           throw new HttpError("The specified HTTP method is not allowed for the requested resource", 400);
         }
       };
-      const { pathname } = new URL(request.url);
       switch (true) {
         case pathname.endsWith("/chat/completions"):
           assert(request.method === "POST");
