@@ -6,76 +6,72 @@ import { Buffer } from "node:buffer";
 const API_KEYS = (function() {
   // 预设的密钥列表
   const predefinedKeys = [
-"AIzaSyAsCGQBOD8RfuwxebgwqPPyHtAdgx3aTMo",
-"AIzaSyCMKZVt7hSY6lqhrOpbDzZM-0xKmt0ShX4",
-"AIzaSyCgk-aTLlS3mwK9zhb9tceyvn3eNXaV9YQ",
-"AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
-"AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
-"AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
-"AIzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
-"AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
-"AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
-"AIzaSyB95dY2-qkDpy7PC5fe-jD1wNzF5vKXOGc",
-"AIzaSyBSiRXbuYwRr2T9zqu4MghU4DEufbr_ZQY",
-"AIzaSyCUDVUsHamubnX_mn2HM_ovWL-EXRWBfmc",
-"AIzaSyDFfp9igiphlpqiNDDruGocouBd63B4plE",
-"AIzaSyA3xz02P78Md_sp9P8hgUV6rnD8V5wHl_I",
-"AIzaSyAtpQKfg2_GNITxejmMo82BxDL-0QReanY",
-"AIzaSyAF3zEc8On49CzdL_Gz2pmasP2DuYAepcM",
-"AIzaSyBSOecsMHZdSIM7aHY3XNAfspJ0zbSEDtk",
-"AIzaSyDBDupYyFZHtt4Es2Pijk6q0tAnTWRjxOY",
-"AIzaSyCL5KBat0QfW7jd1bltB3_NsNKfhLZJezQ",
-"AIzaSyBcx4xPYAmmd-pBkiaUoILlO3Sheu9TFlY",
-"AIzaSyDhg7avSE295pVl7UM7nAWUUqiAgwFrwFc",
-"AIzaSyBTTjWPuQM13zCbMR10qO1SpRBjrZLcoMw",
-"AIzaSyBj-B5C-SJtA3ykqAP_U9l5TAsD4WUuprY",
-"AIzaSyAlVQtRKyZwCXeCfjwLXvYkiWo3Ly_pXuM",
-"AIzaSyB6wfHWsPrJbtP9-UkU0DDC2K2nxkTojlk",
-"AIzaSyDLje4YehvPkncvBDLmcICnYIuIbQD16fA",
-"AIzaSyByglEVo4_mzmUZAG0HZZYAa3tlxv5L6pU",
-"AIzaSyArueFajIY63zciUnkioJbd8zcxkSUeZbU",
-"AIzaSyCu4W4T_R-7n7tN8jfMoHRJWrrwk6bVn9w",
-"AIzaSyCfNKkuIBoVkl6mf0IOzyRaSi09sDxrdSk",
-"AIzaSyCnTdvWTrNk7n28Q-LwZmBZBgHCpDhJ58o",
-"AIzaSyDpxsQvpqN5s9HQpL6zNTMygBW_4tP5DsY",
-"AIzaSyDZvYljhrBE-fN7ceWaFqErAXzfyjqOIeU",
-"AIzaSyAkYvj4ukmvzo9ukqeHAybbozRUZuIaJjc",
-"AIzaSyDWtSq8If5UIEC7D2uA7sCkZhFchZ-hfjo",
-"AIzaSyDubRMgg3eUK_XRzQVTp8k_UUZSKJimS9s",
-"AIzaSyArxFRnyD9cV-qkXSDk7Buh5fkhgMCKIXE",
-"AIzaSyALaly28nOiUEXEd0H7Vs2m26dnzCvl6zU",
-"AIzaSyASlN_5kJvNXYto5BXTDvJRRvWpt_dhBW0",
-"AIzaSyDW1SVoXipuP7_szC2phk5LGThplNNHss8",
-"AIzaSyCqL5PUZFa7krmdkEfWbC7a9_EB3oIq6kg",
-"AIzaSyBK-kNydXldsryLlRwKHUYlKAbMElAt64Y",
-"AIzaSyBwycmu4Jzlqjww2gmb3VkinPX3yq3KkSA",
-"AIzaSyALhA40vulZZFYxmLMDH3lpVwRs3OhcVJc",
-"AIzaSyB6EKR-3HRDP1CYbolE65bYLBmDnhSvCJ8",
-"AIzaSyAGYwccjYZviC2yP3KlTI6C-mQDE4jWr9o",
-"AIzaSyBk0gBdR12O_7nrZnSUfEKdq-X0_ZrM8lA",
-"AIzaSyCLZ4xiFZtaNB8O2yiz-1nc3YiIC6Jr_V0",
-"AIzaSyDa1a2hAfvYQzvqGCH6Nk8qTMCk3O2aCls",
-"AIzaSyA6eiiLjxXKuH3S750cmV5Gt5GcEkLmbQ8",
-"AIzaSyDB5lc55kkDEh7nhGRFnHy-xPeffiENFd0",
-"AIzaSyDeEXtAG4qOV9z20GgDnYRREWPnAMtjlW8",
-"AIzaSyBpTgfUuODNgYKVbgtGxqCiAjd8lTtnsgI",
-"AIzaSyB8akwchatPzc8OG6JBd7kh-5MF798Maj4",
-"AIzaSyBLkqtK3JWIpBtDhztylwgquRFkXABRpnE",
-"AIzaSyDrEkwdLhI0MRPN6dsjF4mJrhBReU32k8A",
-"AIzaSyDRVJGGv6hpYEItzTpiUW31ym7xM4Nj9qE",
-"AIzaSyAjmCaL-HItCJYRQi7KdzzbU4wHt0UgHHI",
-"AIzaSyCE1-Ut41Wmgip49sy4opm4s6HunbOXVzk",
-"AIzaSyCYlmI4u6zb02g2JOMgSIKHZZMU2jOrV8c",
-"AIzaSyAS_gpGU0InGtwswGtcMnydHORG43cgl5Q",
-"AIzaSyB2zdEIwMUI7c7LQYrQYD-rKxXzgi7u_-I",
-"AIzaSyBvAU1Xy6-PkxzgfIHhxhGH9v3orzxa6PU",
-"AIzaSyBhalgCaFwcubvI-B-YvIugpUgmddjpbYQ",
-"AIzaSyCTy_AjF1i3oOe3OsQyifw-M-dbMJF4XtQ",
-"AIzaSyCnVG19hbVR9CJuBV0Y3_a2cLo6oxw9oTM",
-"AIzaSyD6hgtpZrICZOFzWZwaDCyXXy_yAg3095c",
-"AIzaSyCa5yUPn2Miz4ehq3Ak7USy7pR7INbd1D4",
-"AIzaSyCafCTw_Ja7d_ovpI57MxjmyDtTVlgintQ"
-
+    "AIzaSyCa5yUPn2Miz4ehq3Ak7USy7pR7INbd1D4",
+    "AIzaSyBFBF6tCLj1ylVUNe05DU2ZB010z15J5rs",
+    "AIzaSyCgk-aTLlS3mwK9zhb9tceyvn3eNXaV9YQ",
+    "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
+    "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
+    "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
+    "AIzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
+    "AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
+    "AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
+    "AIzaSyB95dY2-qkDpy7PC5fe-jD1wNzF5vKXOGc",
+    "AIzaSyBSiRXbuYwRr2T9zqu4MghU4DEufbr_ZQY",
+    "AIzaSyCUDVUsHamubnX_mn2HM_ovWL-EXRWBfmc",
+    "AIzaSyDFfp9igiphlpqiNDDruGocouBd63B4plE",
+    "AIzaSyA3xz02P78Md_sp9P8hgUV6rnD8V5wHl_I",
+    "AIzaSyAtpQKfg2_GNITxejmMo82BxDL-0QReanY",
+    "AIzaSyAF3zEc8On49CzdL_Gz2pmasP2DuYAepcM",
+    "AIzaSyBSOecsMHZdSIM7aHY3XNAfspJ0zbSEDtk",
+    "AIzaSyDBDupYyFZHtt4Es2Pijk6q0tAnTWRjxOY",
+    "AIzaSyCL5KBat0QfW7jd1bltB3_NsNKfhLZJezQ",
+    "AIzaSyBcx4xPYAmmd-pBkiaUoILlO3Sheu9TFlY",
+    "AIzaSyDhg7avSE295pVl7UM7nAWUUqiAgwFrwFc",
+    "AIzaSyBTTjWPuQM13zCbMR10qO1SpRBjrZLcoMw",
+    "AIzaSyBj-B5C-SJtA3ykqAP_U9l5TAsD4WUuprY",
+    "AIzaSyAlVQtRKyZwCXeCfjwLXvYkiWo3Ly_pXuM",
+    "AIzaSyB6wfHWsPrJbtP9-UkU0DDC2K2nxkTojlk",
+    "AIzaSyDLje4YehvPkncvBDLmcICnYIuIbQD16fA",
+    "AIzaSyByglEVo4_mzmUZAG0HZZYAa3tlxv5L6pU",
+    "AIzaSyArueFajIY63zciUnkioJbd8zcxkSUeZbU",
+    "AIzaSyCu4W4T_R-7n7tN8jfMoHRJWrrwk6bVn9w",
+    "AIzaSyCfNKkuIBoVkl6mf0IOzyRaSi09sDxrdSk",
+    "AIzaSyCnTdvWTrNk7n28Q-LwZmBZBgHCpDhJ58o",
+    "AIzaSyDpxsQvpqN5s9HQpL6zNTMygBW_4tP5DsY",
+    "AIzaSyDZvYljhrBE-fN7ceWaFqErAXzfyjqOIeU",
+    "AIzaSyAkYvj4ukmvzo9ukqeHAybbozRUZuIaJjc",
+    "AIzaSyDWtSq8If5UIEC7D2uA7sCkZhFchZ-hfjo",
+    "AIzaSyDubRMgg3eUK_XRzQVTp8k_UUZSKJimS9s",
+    "AIzaSyArxFRnyD9cV-qkXSDk7Buh5fkhgMCKIXE",
+    "AIzaSyALaly28nOiUEXEd0H7Vs2m26dnzCvl6zU",
+    "AIzaSyASlN_5kJvNXYto5BXTDvJRRvWpt_dhBW0",
+    "AIzaSyDW1SVoXipuP7_szC2phk5LGThplNNHss8",
+    "AIzaSyCqL5PUZFa7krmdkEfWbC7a9_EB3oIq6kg",
+    "AIzaSyBK-kNydXldsryLlRwKHUYlKAbMElAt64Y",
+    "AIzaSyBwycmu4Jzlqjww2gmb3VkinPX3yq3KkSA",
+    "AIzaSyALhA40vulZZFYxmLMDH3lpVwRs3OhcVJc",
+    "AIzaSyB6EKR-3HRDP1CYbolE65bYLBmDnhSvCJ8",
+    "AIzaSyAGYwccjYZviC2yP3KlTI6C-mQDE4jWr9o",
+    "AIzaSyBk0gBdR12O_7nrZnSUfEKdq-X0_ZrM8lA",
+    "AIzaSyCLZ4xiFZtaNB8O2yiz-1nc3YiIC6Jr_V0",
+    "AIzaSyDa1a2hAfvYQzvqGCH6Nk8qTMCk3O2aCls",
+    "AIzaSyA6eiiLjxXKuH3S750cmV5Gt5GcEkLmbQ8",
+    "AIzaSyDB5lc55kkDEh7nhGRFnHy-xPeffiENFd0",
+    "AIzaSyDeEXtAG4qOV9z20GgDnYRREWPnAMtjlW8",
+    "AIzaSyBpTgfUuODNgYKVbgtGxqCiAjd8lTtnsgI",
+    "AIzaSyB8akwchatPzc8OG6JBd7kh-5MF798Maj4",
+    "AIzaSyBLkqtK3JWIpBtDhztylwgquRFkXABRpnE",
+    "AIzaSyDrEkwdLhI0MRPN6dsjF4mJrhBReU32k8A",
+    "AIzaSyDRVJGGv6hpYEItzTpiUW31ym7xM4Nj9qE",
+    "AIzaSyAjmCaL-HItCJYRQi7KdzzbU4wHt0UgHHI",
+    "AIzaSyCE1-Ut41Wmgip49sy4opm4s6HunbOXVzk",
+    "AIzaSyCYlmI4u6zb02g2JOMgSIKHZZMU2jOrV8c",
+    "AIzaSyAS_gpGU0InGtwswGtcMnydHORG43cgl5Q",
+    "AIzaSyB2zdEIwMUI7c7LQYrQYD-rKxXzgi7u_-I",
+    "AIzaSyBvAU1Xy6-PkxzgfIHhxhGH9v3orzxa6PU",
+    "AIzaSyBhalgCaFwcubvI-B-YvIugpUgmddjpbYQ",
+    "AIzaSyCTy_AjF1i3oOe3OsQyifw-M-dbMJF4XtQ",
+    "AIzaSyCnVG19hbVR9CJuBV0Y3_a2cLo6oxw9oTM"
   ];
 
   // 尝试获取环境变量
@@ -100,42 +96,37 @@ let keyIndex = 0;
 // 内存中的运行时密钥集合，用于动态添加的密钥
 const RUNTIME_KEYS = new Set(API_KEYS);
 
-// 上次密钥切换时间
-let lastKeyRotationTime = Date.now();
-
-// 密钥轮询间隔（毫秒），默认为每分钟切换一次
-const KEY_ROTATION_INTERVAL = 1 * 5000; // 1秒
-
 // 获取下一个密钥的函数
-function getNextApiKey(providedKey, forceRotate = false) {
-  // 检查是否需要自动切换密钥（每分钟执行一次）
-  const now = Date.now();
-  if (now - lastKeyRotationTime > KEY_ROTATION_INTERVAL) {
-    // 更新最后切换时间
-    lastKeyRotationTime = now;
-    // 强制轮询到下一个密钥
-    forceRotate = true;
-  }
-
-  // 如果提供了密钥且不是特殊的"rotate"标记，并且不需要强制轮询，则使用提供的密钥
-  if (providedKey && providedKey !== "rotate" && !forceRotate) {
+function getNextApiKey(providedKey) {
+  // 如果提供了密钥且不是特殊的"rotate"标记，则直接使用提供的密钥
+  if (providedKey && providedKey !== "rotate") {
+    // 直接使用提供的密钥
+    // 注意：这里没有检查提供的密钥是否在 RUNTIME_KEYS 中，与原始逻辑保持一致
     return providedKey;
   }
-  
+
+  // 如果 providedKey 是 "rotate" 或者没有提供密钥 (undefined/null)，则执行轮询
+
   // 将运行时密钥转换为数组
   const keyArray = Array.from(RUNTIME_KEYS);
-  
+
   // 如果密钥库为空，返回null
   if (keyArray.length === 0) {
+    console.error("错误：密钥库中没有可用的 API 密钥。");
     return null;
   }
-  
+
   // 轮询选择下一个密钥
+  // 确保 keyIndex 在 RUNTIME_KEYS 大小变化时仍然有效
+  if (keyIndex >= keyArray.length) {
+      keyIndex = 0;
+  }
   const key = keyArray[keyIndex];
-  keyIndex = (keyIndex + 1) % keyArray.length;
-  
-  console.log(`Rotating to API key ${keyIndex}/${keyArray.length} (${key.substring(0, 5)}...${key.substring(key.length - 4)})`);
-  
+  const nextKeyIndex = (keyIndex + 1) % keyArray.length; // 计算下一个索引
+
+  console.log(`轮换密钥：使用索引 ${keyIndex} (下一个将是 ${nextKeyIndex})，共 ${keyArray.length} 个密钥。当前密钥: ${key.substring(0, 5)}...${key.substring(key.length - 4)}`);
+  keyIndex = nextKeyIndex; // 更新索引以备下次调用
+
   return key;
 }
 
@@ -189,58 +180,136 @@ export default {
       return handleOPTIONS();
     }
     const errHandler = (err) => {
-      console.error(err);
-      return new Response(err.message, fixCors({ status: err.status ?? 500 }));
+      console.error("错误处理程序捕获:", err);
+      // 确保即使在错误情况下也返回 CORS 头部
+      const status = err instanceof HttpError ? err.status : 500;
+      const message = err instanceof Error ? err.message : String(err);
+      return new Response(JSON.stringify({ error: { message, type: err.name, code: status } }), fixCors({ status }));
     };
+
     try {
       const { pathname } = new URL(request.url);
-      
-      // 添加密钥管理端点
+
+      // --- 密钥管理端点处理 ---
       if (pathname.endsWith("/admin/keys")) {
-        const adminKey = typeof process !== 'undefined' && process.env ? 
-                  process.env.ADMIN_KEY : 
+        const adminKey = typeof process !== 'undefined' && process.env ?
+                  process.env.ADMIN_KEY :
                   (typeof Deno !== 'undefined' ? Deno.env.get('ADMIN_KEY') : null);
-        
+
         if (!adminKey) {
           throw new HttpError("Admin key not configured on server", 500);
         }
-        
-        return handleKeyManagement(request, adminKey)
-          .catch(errHandler);
+        // 管理端点不参与重试逻辑
+        return await handleKeyManagement(request, adminKey).catch(errHandler);
       }
-      
+
+      // --- API 请求处理与重试逻辑 ---
       const auth = request.headers.get("Authorization");
       const providedKey = auth?.split(" ")[1];
-      // 使用轮询获取API密钥
-      const apiKey = getNextApiKey(providedKey);
-      
-      // 如果没有可用的密钥，返回错误
-      if (!apiKey) {
-        throw new HttpError("API key is required. Either provide a key in Authorization header or configure API_KEYS in the server.", 401);
-      }
-      
-      const assert = (success) => {
-        if (!success) {
-          throw new HttpError("The specified HTTP method is not allowed for the requested resource", 400);
+      const isRotating = !providedKey || providedKey === "rotate"; // 判断是否启用轮换/重试模式
+
+      const maxAttempts = isRotating ? Array.from(RUNTIME_KEYS).length : 1; // 轮换模式下最多尝试所有key，否则只尝试1次
+      let lastErrorResponse = null;
+      let attempts = 0;
+
+      console.log(`开始处理请求 ${pathname}. 轮换模式: ${isRotating}, 最大尝试次数: ${maxAttempts}`);
+
+      while (attempts < maxAttempts) {
+        attempts++;
+        console.log(`尝试次数 ${attempts}/${maxAttempts}`);
+
+        // 获取密钥：如果是轮换模式，每次循环都会获取下一个
+        const apiKey = getNextApiKey(providedKey); // getNextApiKey 内部处理 rotate 和 非 rotate 情况
+
+        if (!apiKey) {
+          console.error("在尝试中未能获取到 API 密钥。");
+          // 如果第一次尝试就没key，抛出错误；如果是重试中key没了，返回上一个错误
+          if (!lastErrorResponse) {
+            throw new HttpError("No API key available.", 500);
+          } else {
+            break; // 跳出循环，将返回上一个错误
+          }
         }
-      };
-      switch (true) {
-        case pathname.endsWith("/chat/completions"):
-          assert(request.method === "POST");
-          return handleCompletions(await request.json(), apiKey)
-            .catch(errHandler);
-        case pathname.endsWith("/embeddings"):
-          assert(request.method === "POST");
-          return handleEmbeddings(await request.json(), apiKey)
-            .catch(errHandler);
-        case pathname.endsWith("/models"):
-          assert(request.method === "GET");
-          return handleModels(apiKey)
-            .catch(errHandler);
-        default:
-          throw new HttpError("404 Not Found", 404);
-      }
+        console.log(`使用密钥: ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}`);
+
+        // 克隆请求对象，因为 body 只能读取一次
+        const clonedRequest = request.clone();
+        let response;
+
+        try {
+          // --- 根据路径调用相应的处理函数 ---
+          const assert = (success) => {
+            if (!success) {
+              throw new HttpError("The specified HTTP method is not allowed for the requested resource", 405); // 405 Method Not Allowed 更合适
+            }
+          };
+
+          switch (true) {
+            case pathname.endsWith("/chat/completions"):
+              assert(clonedRequest.method === "POST");
+              response = await handleCompletions(await clonedRequest.json(), apiKey);
+              break;
+            case pathname.endsWith("/embeddings"):
+              assert(clonedRequest.method === "POST");
+              response = await handleEmbeddings(await clonedRequest.json(), apiKey);
+              break;
+            case pathname.endsWith("/models"):
+              assert(clonedRequest.method === "GET");
+              response = await handleModels(apiKey); // GET 请求不需要读取 body，无需克隆的 json()
+              break;
+            default:
+              // 如果之前的尝试有错误，返回那个错误，否则返回 404
+              if (lastErrorResponse) {
+                 response = lastErrorResponse;
+                 break; // 跳出 switch
+              }
+              throw new HttpError("404 Not Found", 404);
+          }
+
+          // --- 检查响应 ---
+          if (response.ok) {
+            console.log(`尝试 ${attempts} 成功，状态码: ${response.status}`);
+            return response; // 成功，直接返回
+          }
+
+          // --- 处理失败响应 ---
+          console.warn(`尝试 ${attempts} 失败，状态码: ${response.status}`);
+          lastErrorResponse = response.clone(); // 保存错误响应副本以备后用
+
+          // 检查是否是可重试的错误且处于轮换模式
+          const shouldRetry = isRotating && (response.status === 400 || response.status === 429);
+
+          if (shouldRetry) {
+            console.log(`遇到可重试错误 (状态码 ${response.status}) 且处于轮换模式，尝试下一个密钥...`);
+            // 继续下一次循环
+          } else {
+            console.log(`遇到不可重试错误或不处于轮换模式，将返回此错误。`);
+            return response; // 不可重试或非轮换模式，直接返回当前错误
+          }
+
+        } catch (innerErr) {
+           // 捕获 handleCompletions/Embeddings/Models 内部可能抛出的错误
+           console.error(`尝试 ${attempts} 时内部处理函数出错:`, innerErr);
+           // 如果是 HttpError，用其状态码；否则用 500
+           const status = innerErr instanceof HttpError ? innerErr.status : 500;
+           // 创建一个错误响应对象
+           lastErrorResponse = new Response(JSON.stringify({ error: { message: innerErr.message, type: innerErr.name, code: status } }), fixCors({ status }));
+           // 如果是不可恢复的错误（例如请求格式错误），或者非轮换模式，则直接返回
+           if (!isRotating || !(innerErr instanceof HttpError && (innerErr.status === 400 || innerErr.status === 429))) {
+               console.log("内部错误不可重试或非轮换模式，返回错误。");
+               return lastErrorResponse;
+           }
+           console.log("内部错误可重试且处于轮换模式，尝试下一个密钥...");
+           // 继续循环
+        }
+      } // end while loop
+
+      // 如果循环结束仍未成功（尝试了所有密钥）
+      console.warn(`所有 ${attempts} 次尝试均失败，返回最后记录的错误。`);
+      return lastErrorResponse ?? new Response(JSON.stringify({ error: { message: "All API key attempts failed.", type: "RetryError", code: 500 } }), fixCors({ status: 500 })); // 如果连 lastErrorResponse 都没有，返回通用错误
+
     } catch (err) {
+      // 捕获 fetch 函数顶层的错误 (例如 URL 解析错误)
       return errHandler(err);
     }
   }
