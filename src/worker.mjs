@@ -12,7 +12,7 @@ const API_KEYS = (function() {
     "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
     "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
     "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
-    "AIzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
+    "AIzz`aSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
     "AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
     "AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
     "AIzaSyB95dY2-qkDpy7PC5fe-jD1wNzF5vKXOGc",
@@ -96,38 +96,30 @@ let keyIndex = 0;
 // 内存中的运行时密钥集合，用于动态添加的密钥
 const RUNTIME_KEYS = new Set(API_KEYS);
 
-// 获取下一个密钥的函数
-function getNextApiKey(providedKey) {
-  // 如果提供了密钥且不是特殊的"rotate"标记，则直接使用提供的密钥
+// 获取当前轮换索引对应的密钥 (辅助函数)
+function getApiKeyForRotation(index) {
+    const keyArray = Array.from(RUNTIME_KEYS);
+    if (keyArray.length === 0) {
+        console.error("错误：密钥库中没有可用的 API 密钥。");
+        return null;
+    }
+    // 确保索引有效
+    const validIndex = index % keyArray.length;
+    const key = keyArray[validIndex];
+    // console.log(`为轮换提供索引 ${validIndex} 的密钥: ${key.substring(0, 5)}...`);
+    return key;
+}
+
+// 获取要使用的 API 密钥 (惰性轮换逻辑)
+// 此函数不改变全局 keyIndex
+function getApiKey(providedKey) {
+  // 1. 如果提供了具体密钥，直接使用
   if (providedKey && providedKey !== "rotate") {
-    // 直接使用提供的密钥
-    // 注意：这里没有检查提供的密钥是否在 RUNTIME_KEYS 中，与原始逻辑保持一致
+    // console.log(`使用提供的特定密钥: ${providedKey.substring(0, 5)}...`);
     return providedKey;
   }
-
-  // 如果 providedKey 是 "rotate" 或者没有提供密钥 (undefined/null)，则执行轮询
-
-  // 将运行时密钥转换为数组
-  const keyArray = Array.from(RUNTIME_KEYS);
-
-  // 如果密钥库为空，返回null
-  if (keyArray.length === 0) {
-    console.error("错误：密钥库中没有可用的 API 密钥。");
-    return null;
-  }
-
-  // 轮询选择下一个密钥
-  // 确保 keyIndex 在 RUNTIME_KEYS 大小变化时仍然有效
-  if (keyIndex >= keyArray.length) {
-      keyIndex = 0;
-  }
-  const key = keyArray[keyIndex];
-  const nextKeyIndex = (keyIndex + 1) % keyArray.length; // 计算下一个索引
-
-  console.log(`轮换密钥：使用索引 ${keyIndex} (下一个将是 ${nextKeyIndex})，共 ${keyArray.length} 个密钥。当前密钥: ${key.substring(0, 5)}...${key.substring(key.length - 4)}`);
-  keyIndex = nextKeyIndex; // 更新索引以备下次调用
-
-  return key;
+  // 2. 否则（请求轮换 "rotate" 或无密钥），返回当前 keyIndex 指向的密钥
+  return getApiKeyForRotation(keyIndex);
 }
 
 // 管理密钥的函数
@@ -208,29 +200,28 @@ export default {
       const providedKey = auth?.split(" ")[1];
       const isRotating = !providedKey || providedKey === "rotate"; // 判断是否启用轮换/重试模式
 
-      const maxAttempts = isRotating ? Array.from(RUNTIME_KEYS).length : 1; // 轮换模式下最多尝试所有key，否则只尝试1次
+      const keyArrayForMaxAttempts = Array.from(RUNTIME_KEYS); // 用于确定最大尝试次数
+      const maxAttempts = isRotating ? keyArrayForMaxAttempts.length : 1;
       let lastErrorResponse = null;
       let attempts = 0;
+      let currentKeyIndex = keyIndex; // 本次请求开始时的索引，仅在轮换失败时递增
 
-      console.log(`开始处理请求 ${pathname}. 轮换模式: ${isRotating}, 最大尝试次数: ${maxAttempts}`);
+      console.log(`开始处理请求 ${pathname}. 轮换模式: ${isRotating}, 最大尝试次数: ${maxAttempts}, 初始索引: ${currentKeyIndex}`);
 
       while (attempts < maxAttempts) {
         attempts++;
-        console.log(`尝试次数 ${attempts}/${maxAttempts}`);
-
-        // 获取密钥：如果是轮换模式，每次循环都会获取下一个
-        const apiKey = getNextApiKey(providedKey); // getNextApiKey 内部处理 rotate 和 非 rotate 情况
+        // 获取当前尝试使用的密钥
+        const apiKey = getApiKey(providedKey === "rotate" ? getApiKeyForRotation(currentKeyIndex) : providedKey);
 
         if (!apiKey) {
-          console.error("在尝试中未能获取到 API 密钥。");
-          // 如果第一次尝试就没key，抛出错误；如果是重试中key没了，返回上一个错误
-          if (!lastErrorResponse) {
-            throw new HttpError("No API key available.", 500);
-          } else {
-            break; // 跳出循环，将返回上一个错误
+          console.error(`尝试 ${attempts}: 未能获取到 API 密钥 (索引 ${currentKeyIndex})。`);
+          if (!lastErrorResponse) { // 如果是第一次尝试就没key
+             throw new HttpError("No API key available.", 500);
+          } else { // 如果是重试中发现没key了（例如被动态删除了）
+             break; // 结束重试，返回上一个错误
           }
         }
-        console.log(`使用密钥: ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}`);
+        console.log(`尝试 ${attempts}/${maxAttempts}: 使用密钥 (索引 ${currentKeyIndex}): ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}`);
 
         // 克隆请求对象，因为 body 只能读取一次
         const clonedRequest = request.clone();
@@ -280,26 +271,35 @@ export default {
           const shouldRetry = isRotating && (response.status === 400 || response.status === 429);
 
           if (shouldRetry) {
-            console.log(`遇到可重试错误 (状态码 ${response.status}) 且处于轮换模式，尝试下一个密钥...`);
+            console.log(`遇到可重试错误 (状态码 ${response.status}) 且处于轮换模式，递增密钥索引并准备重试...`);
+            // 只有在需要重试时才递增索引
+            currentKeyIndex++; // 下次循环将使用下一个索引的密钥
+            // keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 更新全局索引，以便下次请求从这里开始 (可选，取决于是否希望失败后全局切换)
+            // 决定是否更新全局 keyIndex: 如果希望失败后下次 rotate 请求从新 key 开始，就取消上面的注释。如果希望下次 rotate 仍从上次成功或初始的 key 开始，则保持注释。当前保持注释，即惰性轮换。
             // 继续下一次循环
           } else {
-            console.log(`遇到不可重试错误或不处于轮换模式，将返回此错误。`);
-            return response; // 不可重试或非轮换模式，直接返回当前错误
+            console.log(`遇到不可重试错误、非轮换模式或请求成功，将返回当前响应。`);
+            // 如果成功，keyIndex 保持不变。下次 rotate 请求将继续使用这个成功的 key。
+            return response; // 不可重试、非轮换模式或成功，直接返回当前响应
           }
 
         } catch (innerErr) {
            // 捕获 handleCompletions/Embeddings/Models 内部可能抛出的错误
            console.error(`尝试 ${attempts} 时内部处理函数出错:`, innerErr);
-           // 如果是 HttpError，用其状态码；否则用 500
            const status = innerErr instanceof HttpError ? innerErr.status : 500;
-           // 创建一个错误响应对象
            lastErrorResponse = new Response(JSON.stringify({ error: { message: innerErr.message, type: innerErr.name, code: status } }), fixCors({ status }));
-           // 如果是不可恢复的错误（例如请求格式错误），或者非轮换模式，则直接返回
-           if (!isRotating || !(innerErr instanceof HttpError && (innerErr.status === 400 || innerErr.status === 429))) {
+
+           // 检查是否是可重试的错误且处于轮换模式
+           const shouldRetryFromInnerError = isRotating && (status === 400 || status === 429);
+
+           if (shouldRetryFromInnerError) {
+               console.log(`内部错误可重试 (状态码 ${status}) 且处于轮换模式，递增密钥索引并准备重试...`);
+               currentKeyIndex++; // 递增索引以尝试下一个密钥
+               // keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 可选：更新全局索引
+           } else {
                console.log("内部错误不可重试或非轮换模式，返回错误。");
-               return lastErrorResponse;
+               return lastErrorResponse; // 不可重试或非轮换模式，返回错误
            }
-           console.log("内部错误可重试且处于轮换模式，尝试下一个密钥...");
            // 继续循环
         }
       } // end while loop
