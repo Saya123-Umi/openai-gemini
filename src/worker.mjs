@@ -6,8 +6,8 @@ import { Buffer } from "node:buffer";
 const API_KEYS = (function() {
   // 预设的密钥列表
   const predefinedKeys = [
-"AIzaSyAKrX_MA4YfOFDeAs5mmxTO8EIUHUq0Ru4",
-"AIzaSyBFBF6tCLj1ylVUNe05DU2ZB010z15J5rs",
+"AIzaSyAsCGQBOD8RfuwxebgwqPPyHtAdgx3aTMo",
+"AIzaSyCMKZVt7hSY6lqhrOpbDzZM-0xKmt0ShX4",
 "AIzaSyCgk-aTLlS3mwK9zhb9tceyvn3eNXaV9YQ",
 "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
 "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
