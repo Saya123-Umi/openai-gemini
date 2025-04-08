@@ -720,29 +720,6 @@ function transformResponseStream (data, stop, first) {
 const delimiter = "\n\n";
 async function toOpenAiStream (chunk, controller) {
   const transform = transformResponseStream.bind(this);
-  const line = await chunk;
-  if (!line) { return; }
-  let data;
-  try {
-    data = JSON.parse(line);
-  } catch (err) {
-    console.error(line);
-    console.error(err);
-    const length = this.last.length || 1; // at least 1 error msg
-    const candidates = Array.from({ length }, (_, index) => ({
-      finishReason: "error",
-      content: { parts: [{ text: err }] },
-      index,
-    }));
-    data = { candidates };
-  }
-  const cand = data.candidates[0];
-  console.assert(data.candidates.length === 1, "Unexpected candidates count: %d", data.candidates.length);
-  cand.index = cand.index || 0; // absent in new -002 models response
-  if (!this.last[cand.index]) {
-    controller.enqueue(transform(data, false, "first"));
-  }
-  this.last[cand.index] = data;
   if (cand.content) { // prevent empty data (e.g. when MAX_TOKENS)
     controller.enqueue(transform(data));
   }
