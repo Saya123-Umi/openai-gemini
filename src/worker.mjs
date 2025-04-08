@@ -506,11 +506,38 @@ async function handleCompletions (req, apiKey) {
         }))
         .pipeThrough(new TextEncoderStream());
     } else {
-      body = await response.text();
-      body = processCompletionsResponse(JSON.parse(body), model, id);
+      // --- 修改：仅在 response.ok 时处理响应体 ---
+      if (response.ok) {
+        try {
+          body = await response.text();
+          const jsonData = JSON.parse(body);
+          // 添加对 jsonData 和 jsonData.candidates 的检查
+          if (!jsonData || !jsonData.candidates) {
+              console.error("处理非流式响应时出错：解析后的 JSON 缺少 candidates 字段。", jsonData);
+              // 返回一个表示处理错误的响应，或者直接返回原始的 response 让上层处理
+              // 这里选择返回原始 response，让 fetch 中的重试逻辑判断状态码
+              // throw new HttpError("Invalid response structure from upstream API", 502); // 或者抛出错误
+          } else {
+             body = processCompletionsResponse(jsonData, model, id);
+             // 成功处理后，需要创建一个新的 Response 对象，因为原始 response 的 body 可能已被读取
+             return new Response(body, fixCors(response));
+          }
+        } catch (e) {
+           console.error("处理非流式响应时 JSON 解析或处理出错:", e);
+           // 解析或处理出错，也返回原始 response，让上层根据状态码判断
+           // throw new HttpError(`Error processing upstream response: ${e.message}`, 502); // 或者抛出错误
+        }
+      } else {
+        // 如果 response.ok 为 false，不处理 body，直接返回原始 response
+        console.warn(`handleCompletions 收到非 OK 响应 (状态码 ${response.status})，直接返回原始响应。`);
+        // 不需要 new Response，直接返回原始的，让 fetch 里的逻辑处理
+        // return new Response(response.body, fixCors(response)); // 错误，应该直接返回 response
+      }
+      // --- 修改结束 ---
     }
   }
-  return new Response(body, fixCors(response));
+  // 如果 response.ok 为 false，或者处理过程中出错（且未抛出），则原始 response 会在这里被返回
+  return response; // 返回原始 response 或经过流处理的 response
 }
 
 const harmCategory = [
