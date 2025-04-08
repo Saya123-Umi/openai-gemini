@@ -195,6 +195,38 @@ export default {
         }
     }
     console.log(`请求头 (部分): ${JSON.stringify(loggedHeaders)}`);
+
+    // --- 新增：尝试记录请求体 ---
+    // 需要先克隆请求，因为读取 body 会消耗它
+    const logRequestClone = request.clone();
+    try {
+        if (logRequestClone.body) {
+            // 只记录 POST 请求的 body，因为 GET/OPTIONS 通常没有有意义的 body
+            if (logRequestClone.method === "POST") {
+                const bodyText = await logRequestClone.text(); // 读取为文本
+                if (bodyText) {
+                    try {
+                        // 尝试解析为 JSON 并格式化输出，隐藏部分敏感信息（如果需要）
+                        // 注意：这里简单地打印前 500 个字符，避免日志过长
+                        console.log(`请求体 (前 500 字符): ${bodyText.substring(0, 500)}${bodyText.length > 500 ? '...' : ''}`);
+                        // 如果需要更详细的 JSON 解析和隐藏，可以在这里添加逻辑
+                        // const bodyJson = JSON.parse(bodyText);
+                        // console.log(`请求体 (JSON): ${JSON.stringify(bodyJson, null, 2)}`);
+                    } catch (jsonError) {
+                        console.log(`请求体 (非 JSON, 前 500 字符): ${bodyText.substring(0, 500)}${bodyText.length > 500 ? '...' : ''}`);
+                    }
+                } else {
+                    console.log("请求体为空。");
+                }
+            } else {
+                 console.log(`非 POST 请求 (${logRequestClone.method})，不记录请求体。`);
+            }
+        } else {
+            console.log("请求没有 body。");
+        }
+    } catch (bodyError) {
+        console.error("记录请求体时出错:", bodyError);
+    }
     // ------------------------------------
 
     if (request.method === "OPTIONS") {
