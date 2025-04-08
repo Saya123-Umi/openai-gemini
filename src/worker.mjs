@@ -72,6 +72,11 @@ const API_KEYS = (function() {
     "AIzaSyBhalgCaFwcubvI-B-YvIugpUgmddjpbYQ",
     "AIzaSyCTy_AjF1i3oOe3OsQyifw-M-dbMJF4XtQ",
     "AIzaSyCnVG19hbVR9CJuBV0Y3_a2cLo6oxw9oTM"
+"AIzaSyD6hgtpZrICZOFzWZwaDCyXXy_yAg3095c",
+"AIzaSyBLPrJwYPztz4NltzrOZMIXJ9kvBOXtNMg",
+"AIzaSyCGulL1HhP-jFcvJ4TAliD-hQBvxC_ijME",
+"AIzaSyBaQ_jE79BfYxip5Vmrtu-1vxpWOBcnnSA",
+"AIzaSyDNIzxAd2LD1a8DBC2PqgiLoLPC_nf11Vw"
   ];
 
   // 尝试获取环境变量
