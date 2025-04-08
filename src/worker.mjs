@@ -12,7 +12,7 @@ const API_KEYS = (function() {
     "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
     "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
     "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
-    "AIzz`aSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
+    "AIzzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
     "AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
     "AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
     "AIzaSyB95dY2-qkDpy7PC5fe-jD1wNzF5vKXOGc",
