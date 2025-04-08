@@ -174,6 +174,29 @@ async function handleKeyManagement(request, adminKey) {
 
 export default {
   async fetch (request) {
+    // --- 新增：记录传入请求的基本信息 ---
+    const { pathname } = new URL(request.url);
+    console.log(`\n--- 收到请求 ---`);
+    console.log(`时间: ${new Date().toISOString()}`);
+    console.log(`方法: ${request.method}`);
+    console.log(`路径: ${pathname}`);
+    // 记录部分关键请求头
+    const headersToLog = ['Authorization', 'Content-Type', 'User-Agent', 'Accept'];
+    const loggedHeaders = {};
+    for (const headerName of headersToLog) {
+        if (request.headers.has(headerName)) {
+            // 对 Authorization 头进行部分隐藏
+            if (headerName === 'Authorization' && request.headers.get(headerName).includes('Bearer ')) {
+                 const token = request.headers.get(headerName).split(' ')[1];
+                 loggedHeaders[headerName] = `Bearer ${token.substring(0, 5)}...${token.substring(token.length - 4)}`;
+            } else {
+                 loggedHeaders[headerName] = request.headers.get(headerName);
+            }
+        }
+    }
+    console.log(`请求头 (部分): ${JSON.stringify(loggedHeaders)}`);
+    // ------------------------------------
+
     if (request.method === "OPTIONS") {
       return handleOPTIONS();
     }
