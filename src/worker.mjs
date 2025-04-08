@@ -174,12 +174,17 @@ async function handleKeyManagement(request, adminKey) {
 
 export default {
   async fetch (request) {
-    // --- 新增：记录传入请求的基本信息 ---
-    const { pathname } = new URL(request.url);
-    console.log(`\n--- 收到请求 ---`);
-    console.log(`时间: ${new Date().toISOString()}`);
-    console.log(`方法: ${request.method}`);
-    console.log(`路径: ${pathname}`);
+    // --- 更靠前、更明确的日志记录 ---
+    console.log(">>> [Worker Log] fetch handler started <<<"); // 最优先的基础日志
+
+    let pathname = "[URL 解析错误]";
+    try {
+        pathname = new URL(request.url).pathname;
+    } catch (urlError) {
+        console.error(">>> [Worker Log] Error parsing request URL:", urlError);
+    }
+    console.log(`>>> [Worker Log] Method: ${request.method}, Path: ${pathname}`);
+
     // 记录部分关键请求头
     const headersToLog = ['Authorization', 'Content-Type', 'User-Agent', 'Accept'];
     const loggedHeaders = {};
@@ -194,40 +199,25 @@ export default {
             }
         }
     }
-    console.log(`请求头 (部分): ${JSON.stringify(loggedHeaders)}`);
+    console.log(`>>> [Worker Log] Headers (partial): ${JSON.stringify(loggedHeaders)}`);
 
-    // --- 新增：尝试记录请求体 ---
-    // 需要先克隆请求，因为读取 body 会消耗它
-    const logRequestClone = request.clone();
+    // --- 尝试记录请求体 ---
     try {
-        if (logRequestClone.body) {
-            // 只记录 POST 请求的 body，因为 GET/OPTIONS 通常没有有意义的 body
-            if (logRequestClone.method === "POST") {
-                const bodyText = await logRequestClone.text(); // 读取为文本
-                if (bodyText) {
-                    try {
-                        // 尝试解析为 JSON 并格式化输出，隐藏部分敏感信息（如果需要）
-                        // 注意：这里简单地打印前 500 个字符，避免日志过长
-                        console.log(`请求体 (前 500 字符): ${bodyText.substring(0, 500)}${bodyText.length > 500 ? '...' : ''}`);
-                        // 如果需要更详细的 JSON 解析和隐藏，可以在这里添加逻辑
-                        // const bodyJson = JSON.parse(bodyText);
-                        // console.log(`请求体 (JSON): ${JSON.stringify(bodyJson, null, 2)}`);
-                    } catch (jsonError) {
-                        console.log(`请求体 (非 JSON, 前 500 字符): ${bodyText.substring(0, 500)}${bodyText.length > 500 ? '...' : ''}`);
-                    }
-                } else {
-                    console.log("请求体为空。");
-                }
+        if (request.method === "POST") {
+            const logRequestClone = request.clone(); // 克隆用于日志记录
+            const bodyText = await logRequestClone.text();
+            if (bodyText) {
+                console.log(`>>> [Worker Log] Request Body (first 500 chars): ${bodyText.substring(0, 500)}${bodyText.length > 500 ? '...' : ''}`);
             } else {
-                 console.log(`非 POST 请求 (${logRequestClone.method})，不记录请求体。`);
+                console.log(">>> [Worker Log] Request body is empty.");
             }
         } else {
-            console.log("请求没有 body。");
+             console.log(`>>> [Worker Log] Not a POST request (${request.method}), skipping body log.`);
         }
     } catch (bodyError) {
-        console.error("记录请求体时出错:", bodyError);
+        console.error(">>> [Worker Log] Error logging request body:", bodyError);
     }
-    // ------------------------------------
+    // --- 日志记录结束 ---
 
     if (request.method === "OPTIONS") {
       return handleOPTIONS();
