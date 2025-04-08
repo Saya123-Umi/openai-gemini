@@ -71,7 +71,7 @@ const API_KEYS = (function() {
     "AIzaSyBvAU1Xy6-PkxzgfIHhxhGH9v3orzxa6PU",
     "AIzaSyBhalgCaFwcubvI-B-YvIugpUgmddjpbYQ",
     "AIzaSyCTy_AjF1i3oOe3OsQyifw-M-dbMJF4XtQ",
-    "AIzaSyCnVG19hbVR9CJuBV0Y3_a2cLo6oxw9oTM"
+    "AIzaSyCnVG19hbVR9CJuBV0Y3_a2cLo6oxw9oTM",
 "AIzaSyD6hgtpZrICZOFzWZwaDCyXXy_yAg3095c",
 "AIzaSyBLPrJwYPztz4NltzrOZMIXJ9kvBOXtNMg",
 "AIzaSyCGulL1HhP-jFcvJ4TAliD-hQBvxC_ijME",
