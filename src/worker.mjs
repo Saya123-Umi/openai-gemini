@@ -175,7 +175,7 @@ async function handleKeyManagement(request, adminKey) {
 export default {
   async fetch (request) {
     // --- 更靠前、更明确的日志记录 ---
-    console.log(">>> [Worker Log] fetch handler started <<<"); // 最优先的基础日志
+    // console.log(">>> [Worker Log] fetch handler started <<<"); // Removed for brevity
 
     let pathname = "[URL 解析错误]";
     try {
@@ -183,7 +183,7 @@ export default {
     } catch (urlError) {
         console.error(">>> [Worker Log] Error parsing request URL:", urlError);
     }
-    console.log(`>>> [Worker Log] Method: ${request.method}, Path: ${pathname}`);
+    // console.log(`>>> [Worker Log] Method: ${request.method}, Path: ${pathname}`); // Removed for brevity
 
     // 记录部分关键请求头
     const headersToLog = ['Authorization', 'Content-Type', 'User-Agent', 'Accept'];
@@ -199,25 +199,9 @@ export default {
             }
         }
     }
-    console.log(`>>> [Worker Log] Headers (partial): ${JSON.stringify(loggedHeaders)}`);
+    // console.log(`>>> [Worker Log] Headers (partial): ${JSON.stringify(loggedHeaders)}`); // Removed for brevity
 
-    // --- 尝试记录请求体 ---
-    try {
-        if (request.method === "POST") {
-            const logRequestClone = request.clone(); // 克隆用于日志记录
-            const bodyText = await logRequestClone.text();
-            if (bodyText) {
-                console.log(`>>> [Worker Log] Request Body (first 500 chars): ${bodyText.substring(0, 500)}${bodyText.length > 500 ? '...' : ''}`);
-            } else {
-                console.log(">>> [Worker Log] Request body is empty.");
-            }
-        } else {
-             console.log(`>>> [Worker Log] Not a POST request (${request.method}), skipping body log.`);
-        }
-    } catch (bodyError) {
-        console.error(">>> [Worker Log] Error logging request body:", bodyError);
-    }
-    // --- 日志记录结束 ---
+    // --- Request Body Logging Removed for performance ---
 
     if (request.method === "OPTIONS") {
       return handleOPTIONS();
@@ -257,7 +241,7 @@ export default {
       let attempts = 0;
       let currentKeyIndex = keyIndex; // 本次请求开始时的索引，仅在轮换失败时递增
 
-      console.log(`开始处理请求 ${pathname}. 轮换模式: ${isRotating}, 最大尝试次数: ${maxAttempts} (最多3轮), 初始索引: ${currentKeyIndex}`);
+      // console.log(`开始处理请求 ${pathname}. 轮换模式: ${isRotating}, 最大尝试次数: ${maxAttempts} (最多3轮), 初始索引: ${currentKeyIndex}`); // Removed for brevity
 
       while (attempts < maxAttempts) {
         attempts++;
@@ -273,7 +257,8 @@ export default {
           }
         }
         const currentRound = keyArrayForMaxAttempts.length > 0 ? Math.floor((attempts - 1) / keyArrayForMaxAttempts.length) + 1 : 1;
-        console.log(`第 ${currentRound}/3 轮 - 尝试 ${attempts}/${maxAttempts}: 使用密钥 (索引 ${currentKeyIndex}): ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}`);
+        // 保留此日志以显示正在尝试哪个密钥
+        console.log(`轮次 ${currentRound}/3 | 尝试 ${attempts}/${maxAttempts} | 密钥索引 ${currentKeyIndex}`);
 
         // 克隆请求对象，因为 body 只能读取一次
         const clonedRequest = request.clone();
@@ -311,7 +296,7 @@ export default {
 
           // --- 检查响应 ---
           if (response.ok) {
-            console.log(`尝试 ${attempts} 成功，状态码: ${response.status}`);
+            // console.log(`尝试 ${attempts} 成功，状态码: ${response.status}`); // Removed for brevity, only log errors
             return response; // 成功，直接返回
           }
 
@@ -324,14 +309,14 @@ export default {
           const shouldRetry = isRotating && [400, 429, 404, 500].includes(response.status);
 
           if (shouldRetry) {
-            console.log(`遇到可重试错误 (状态码 ${response.status}) 且处于轮换模式，递增密钥索引并准备重试...`);
+            // console.log(`遇到可重试错误 (状态码 ${response.status}) 且处于轮换模式，递增密钥索引并准备重试...`); // Removed for brevity, failure log is sufficient
             // 只有在需要重试时才递增索引
             currentKeyIndex++; // 下次循环将使用下一个索引的密钥 (取模运算会自动处理绕回)
             // keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 可选：更新全局索引
             // 保持注释，实现惰性轮换：下次新请求仍从上次成功或初始的 key 开始
             // 继续下一次循环
           } else {
-            console.log(`遇到不可重试错误 (状态码 ${response.status})、非轮换模式或请求成功，将返回当前响应。`);
+            // console.log(`遇到不可重试错误 (状态码 ${response.status})、非轮换模式或请求成功，将返回当前响应。`); // Removed for brevity
             // 如果成功，keyIndex 保持不变。下次 rotate 请求将继续使用这个成功的 key。
             return response; // 不可重试、非轮换模式或成功，直接返回当前响应
           }
@@ -347,11 +332,11 @@ export default {
            const shouldRetryFromInnerError = isRotating && [400, 429, 404, 500].includes(status);
 
            if (shouldRetryFromInnerError) {
-               console.log(`内部错误可重试 (状态码 ${status}) 且处于轮换模式，递增密钥索引并准备重试...`);
+               // console.log(`内部错误可重试 (状态码 ${status}) 且处于轮换模式，递增密钥索引并准备重试...`); // Removed for brevity
                currentKeyIndex++; // 递增索引以尝试下一个密钥 (取模运算会自动处理绕回)
                // keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 可选：更新全局索引
            } else {
-               console.log(`内部错误不可重试 (状态码 ${status}) 或非轮换模式，返回错误。`);
+               // console.log(`内部错误不可重试 (状态码 ${status}) 或非轮换模式，返回错误。`); // Removed for brevity
                return lastErrorResponse; // 不可重试或非轮换模式，返回错误
            }
            // 继续循环
