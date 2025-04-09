@@ -258,7 +258,7 @@ export default {
         }
         const currentRound = keyArrayForMaxAttempts.length > 0 ? Math.floor((attempts - 1) / keyArrayForMaxAttempts.length) + 1 : 1;
         // 保留此日志以显示正在尝试哪个密钥
-        console.log(`轮次 ${currentRound}/3 | 尝试 ${attempts}/${maxAttempts} | 密钥索引 ${currentKeyIndex}`);
+        console.log(`轮次 ${currentRound}/3 | 尝试 ${attempts}/${maxAttempts} | 密钥 ...${apiKey.slice(-6)}`); // 显示密钥后6位
 
         // 克隆请求对象，因为 body 只能读取一次
         const clonedRequest = request.clone();
