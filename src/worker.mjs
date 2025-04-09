@@ -77,7 +77,8 @@ const API_KEYS = (function() {
 "AIzaSyCGulL1HhP-jFcvJ4TAliD-hQBvxC_ijME",
 "AIzaSyBaQ_jE79BfYxip5Vmrtu-1vxpWOBcnnSA",
 "AIzaSyDNIzxAd2LD1a8DBC2PqgiLoLPC_nf11Vw",
-"AIzaSyBVEQnvx3-uwVTN1-HCgCpgp2hXyKf4eLg"
+"AIzaSyBVEQnvx3-uwVTN1-HCgCpgp2hXyKf4eLg",
+"AIzaSyBIZfeSx6XmheGBDdc0zN3o1WwoKWDtL_k"
   ];
 
   // 尝试获取环境变量
