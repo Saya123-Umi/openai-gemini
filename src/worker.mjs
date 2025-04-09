@@ -77,7 +77,6 @@ const API_KEYS = (function() {
 "AIzaSyCGulL1HhP-jFcvJ4TAliD-hQBvxC_ijME",
 "AIzaSyBaQ_jE79BfYxip5Vmrtu-1vxpWOBcnnSA",
 "AIzaSyDNIzxAd2LD1a8DBC2PqgiLoLPC_nf11Vw",
-"AIzaSyCvnLhM4XWf70enFVo9eeV8YS_crvdd18Y",
 "AIzaSyBVEQnvx3-uwVTN1-HCgCpgp2hXyKf4eLg"
   ];
 
@@ -253,12 +252,12 @@ export default {
       const isRotating = !providedKey || providedKey === "rotate"; // 判断是否启用轮换/重试模式
 
       const keyArrayForMaxAttempts = Array.from(RUNTIME_KEYS); // 用于确定最大尝试次数
-      const maxAttempts = isRotating ? keyArrayForMaxAttempts.length : 1;
+      const maxAttempts = isRotating ? keyArrayForMaxAttempts.length * 3 : 1; // 最多轮询 3 轮
       let lastErrorResponse = null;
       let attempts = 0;
       let currentKeyIndex = keyIndex; // 本次请求开始时的索引，仅在轮换失败时递增
 
-      console.log(`开始处理请求 ${pathname}. 轮换模式: ${isRotating}, 最大尝试次数: ${maxAttempts}, 初始索引: ${currentKeyIndex}`);
+      console.log(`开始处理请求 ${pathname}. 轮换模式: ${isRotating}, 最大尝试次数: ${maxAttempts} (最多3轮), 初始索引: ${currentKeyIndex}`);
 
       while (attempts < maxAttempts) {
         attempts++;
@@ -273,7 +272,8 @@ export default {
              break; // 结束重试，返回上一个错误
           }
         }
-        console.log(`尝试 ${attempts}/${maxAttempts}: 使用密钥 (索引 ${currentKeyIndex}): ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}`);
+        const currentRound = keyArrayForMaxAttempts.length > 0 ? Math.floor((attempts - 1) / keyArrayForMaxAttempts.length) + 1 : 1;
+        console.log(`第 ${currentRound}/3 轮 - 尝试 ${attempts}/${maxAttempts}: 使用密钥 (索引 ${currentKeyIndex}): ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}`);
 
         // 克隆请求对象，因为 body 只能读取一次
         const clonedRequest = request.clone();
@@ -326,7 +326,7 @@ export default {
           if (shouldRetry) {
             console.log(`遇到可重试错误 (状态码 ${response.status}) 且处于轮换模式，递增密钥索引并准备重试...`);
             // 只有在需要重试时才递增索引
-            currentKeyIndex++; // 下次循环将使用下一个索引的密钥
+            currentKeyIndex++; // 下次循环将使用下一个索引的密钥 (取模运算会自动处理绕回)
             // keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 可选：更新全局索引
             // 保持注释，实现惰性轮换：下次新请求仍从上次成功或初始的 key 开始
             // 继续下一次循环
@@ -348,7 +348,7 @@ export default {
 
            if (shouldRetryFromInnerError) {
                console.log(`内部错误可重试 (状态码 ${status}) 且处于轮换模式，递增密钥索引并准备重试...`);
-               currentKeyIndex++; // 递增索引以尝试下一个密钥
+               currentKeyIndex++; // 递增索引以尝试下一个密钥 (取模运算会自动处理绕回)
                // keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 可选：更新全局索引
            } else {
                console.log(`内部错误不可重试 (状态码 ${status}) 或非轮换模式，返回错误。`);
@@ -359,8 +359,8 @@ export default {
       } // end while loop
 
       // 如果循环结束仍未成功（尝试了所有密钥）
-      console.warn(`所有 ${attempts} 次尝试均失败，返回最后记录的错误。`);
-      return lastErrorResponse ?? new Response(JSON.stringify({ error: { message: "All API key attempts failed.", type: "RetryError", code: 500 } }), fixCors({ status: 500 })); // 如果连 lastErrorResponse 都没有，返回通用错误
+      console.warn(`在 ${maxAttempts} 次尝试 (最多3轮轮询) 后均失败，返回最后记录的错误。`);
+      return lastErrorResponse ?? new Response(JSON.stringify({ error: { message: `All API key attempts failed after ${maxAttempts} tries (up to 3 rounds).`, type: "RetryError", code: 500 } }), fixCors({ status: 500 })); // 如果连 lastErrorResponse 都没有，返回通用错误
 
     } catch (err) {
       // 捕获 fetch 函数顶层的错误 (例如 URL 解析错误)
