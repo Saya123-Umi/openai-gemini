@@ -1,363 +1,235 @@
 import { Buffer } from "node:buffer";
 
-// 添加API密钥库配置
-// 从环境变量读取API密钥，格式为逗号分隔的密钥列表
-// 例如: GEMINI_API_KEYS=key1,key2,key3
-const API_KEYS = (function() {
-  // 预设的密钥列表
-  const predefinedKeys = [
-    "AIzaSyCa5yUPn2Miz4ehq3Ak7USy7pR7INbd1D4",
-    "AIzaSyBFBF6tCLj1ylVUNe05DU2ZB010z15J5rs",
-    "AIzaSyCgk-aTLlS3mwK9zhb9tceyvn3eNXaV9YQ",
-    "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
-    "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
-    "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
-    "AIzzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
-    "AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
-    "AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
-    "AIzaSyB95dY2-qkDpy7PC5fe-jD1wNzF5vKXOGc",
-    "AIzaSyBSiRXbuYwRr2T9zqu4MghU4DEufbr_ZQY",
-    "AIzaSyCUDVUsHamubnX_mn2HM_ovWL-EXRWBfmc",
-    "AIzaSyDFfp9igiphlpqiNDDruGocouBd63B4plE",
-    "AIzaSyA3xz02P78Md_sp9P8hgUV6rnD8V5wHl_I",
-    "AIzaSyAtpQKfg2_GNITxejmMo82BxDL-0QReanY",
-    "AIzaSyAF3zEc8On49CzdL_Gz2pmasP2DuYAepcM",
-    "AIzaSyBSOecsMHZdSIM7aHY3XNAfspJ0zbSEDtk",
-    "AIzaSyDBDupYyFZHtt4Es2Pijk6q0tAnTWRjxOY",
-    "AIzaSyCL5KBat0QfW7jd1bltB3_NsNKfhLZJezQ",
-    "AIzaSyBcx4xPYAmmd-pBkiaUoILlO3Sheu9TFlY",
-    "AIzaSyDhg7avSE295pVl7UM7nAWUUqiAgwFrwFc",
-    "AIzaSyBTTjWPuQM13zCbMR10qO1SpRBjrZLcoMw",
-    "AIzaSyBj-B5C-SJtA3ykqAP_U9l5TAsD4WUuprY",
-    "AIzaSyAlVQtRKyZwCXeCfjwLXvYkiWo3Ly_pXuM",
-    "AIzaSyB6wfHWsPrJbtP9-UkU0DDC2K2nxkTojlk",
-    "AIzaSyDLje4YehvPkncvBDLmcICnYIuIbQD16fA",
-    "AIzaSyByglEVo4_mzmUZAG0HZZYAa3tlxv5L6pU",
-    "AIzaSyArueFajIY63zciUnkioJbd8zcxkSUeZbU",
-    "AIzaSyCu4W4T_R-7n7tN8jfMoHRJWrrwk6bVn9w",
-    "AIzaSyCfNKkuIBoVkl6mf0IOzyRaSi09sDxrdSk",
-    "AIzaSyCnTdvWTrNk7n28Q-LwZmBZBgHCpDhJ58o",
-    "AIzaSyDpxsQvpqN5s9HQpL6zNTMygBW_4tP5DsY",
-    "AIzaSyDZvYljhrBE-fN7ceWaFqErAXzfyjqOIeU",
-    "AIzaSyAkYvj4ukmvzo9ukqeHAybbozRUZuIaJjc",
-    "AIzaSyDWtSq8If5UIEC7D2uA7sCkZhFchZ-hfjo",
-    "AIzaSyDubRMgg3eUK_XRzQVTp8k_UUZSKJimS9s",
-    "AIzaSyArxFRnyD9cV-qkXSDk7Buh5fkhgMCKIXE",
-    "AIzaSyALaly28nOiUEXEd0H7Vs2m26dnzCvl6zU",
-    "AIzaSyASlN_5kJvNXYto5BXTDvJRRvWpt_dhBW0",
-    "AIzaSyDW1SVoXipuP7_szC2phk5LGThplNNHss8",
-    "AIzaSyCqL5PUZFa7krmdkEfWbC7a9_EB3oIq6kg",
-    "AIzaSyBK-kNydXldsryLlRwKHUYlKAbMElAt64Y",
-    "AIzaSyBwycmu4Jzlqjww2gmb3VkinPX3yq3KkSA",
-    "AIzaSyALhA40vulZZFYxmLMDH3lpVwRs3OhcVJc",
-    "AIzaSyB6EKR-3HRDP1CYbolE65bYLBmDnhSvCJ8",
-    "AIzaSyAGYwccjYZviC2yP3KlTI6C-mQDE4jWr9o",
-    "AIzaSyBk0gBdR12O_7nrZnSUfEKdq-X0_ZrM8lA",
-    "AIzaSyCLZ4xiFZtaNB8O2yiz-1nc3YiIC6Jr_V0",
-    "AIzaSyDa1a2hAfvYQzvqGCH6Nk8qTMCk3O2aCls",
-    "AIzaSyA6eiiLjxXKuH3S750cmV5Gt5GcEkLmbQ8",
-    "AIzaSyDB5lc55kkDEh7nhGRFnHy-xPeffiENFd0",
-    "AIzaSyDeEXtAG4qOV9z20GgDnYRREWPnAMtjlW8",
-    "AIzaSyBpTgfUuODNgYKVbgtGxqCiAjd8lTtnsgI",
-    "AIzaSyB8akwchatPzc8OG6JBd7kh-5MF798Maj4",
-    "AIzaSyBLkqtK3JWIpBtDhztylwgquRFkXABRpnE",
-    "AIzaSyDrEkwdLhI0MRPN6dsjF4mJrhBReU32k8A",
-    "AIzaSyDRVJGGv6hpYEItzTpiUW31ym7xM4Nj9qE",
-    "AIzaSyAjmCaL-HItCJYRQi7KdzzbU4wHt0UgHHI",
-    "AIzaSyCE1-Ut41Wmgip49sy4opm4s6HunbOXVzk",
-    "AIzaSyCYlmI4u6zb02g2JOMgSIKHZZMU2jOrV8c",
-    "AIzaSyAS_gpGU0InGtwswGtcMnydHORG43cgl5Q",
-    "AIzaSyB2zdEIwMUI7c7LQYrQYD-rKxXzgi7u_-I",
-    "AIzaSyBvAU1Xy6-PkxzgfIHhxhGH9v3orzxa6PU",
-    "AIzaSyBhalgCaFwcubvI-B-YvIugpUgmddjpbYQ",
-    "AIzaSyCTy_AjF1i3oOe3OsQyifw-M-dbMJF4XtQ",
-    "AIzaSyCnVG19hbVR9CJuBV0Y3_a2cLo6oxw9oTM",
-    "AIzaSyD6hgtpZrICZOFzWZwaDCyXXy_yAg3095c",
-    "AIzaSyBLPrJwYPztz4NltzrOZMIXJ9kvBOXtNMg",
-    "AIzaSyCGulL1HhP-jFcvJ4TAliD-hQBvxC_ijME",
-    "AIzaSyBaQ_jE79BfYxip5Vmrtu-1vxpWOBcnnSA",
-    "AIzaSyDNIzxAd2LD1a8DBC2PqgiLoLPC_nf11Vw",
-    "AIzaSyBVEQnvx3-uwVTN1-HCgCpgp2hXyKf4eLg",
-    "AIzaSyBIZfeSx6XmheGBDdc0zN3o1WwoKWDtL_k",
-    "AIzaSyCvnLhM4XWf70enFVo9eeV8YS_crvdd18Y"
+// API 密钥库
+const API_KEYS = [
+  "AIzaSyAsCGQBOD8RfuwxebgwqPPyHtAdgx3aTMo",
+  "AIzaSyCMKZVt7hSY6lqhrOpbDzZM-0xKmt0ShX4",
+  "AIzaSyCgk-aTLlS3mwK9zhb9tceyvn3eNXaV9YQ",
+  "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
+  "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
+  "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
+  "AIzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
+  "AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
+  "AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
+  "AIzaSyB95dY2-qkDpy7PC5fe-jD1wNzF5vKXOGc",
+  "AIzaSyBSiRXbuYwRr2T9zqu4MghU4DEufbr_ZQY",
+  "AIzaSyCUDVUsHamubnX_mn2HM_ovWL-EXRWBfmc",
+  "AIzaSyDFfp9igiphlpqiNDDruGocouBd63B4plE",
+  "AIzaSyA3xz02P78Md_sp9P8hgUV6rnD8V5wHl_I",
+  "AIzaSyAtpQKfg2_GNITxejmMo82BxDL-0QReanY",
+  "AIzaSyAF3zEc8On49CzdL_Gz2pmasP2DuYAepcM",
+  "AIzaSyBSOecsMHZdSIM7aHY3XNAfspJ0zbSEDtk",
+  "AIzaSyDBDupYyFZHtt4Es2Pijk6q0tAnTWRjxOY",
+  "AIzaSyCL5KBat0QfW7jd1bltB3_NsNKfhLZJezQ",
+  "AIzaSyBcx4xPYAmmd-pBkiaUoILlO3Sheu9TFlY",
+  "AIzaSyDhg7avSE295pVl7UM7nAWUUqiAgwFrwFc",
+  "AIzaSyBTTjWPuQM13zCbMR10qO1SpRBjrZLcoMw",
+  "AIzaSyBj-B5C-SJtA3ykqAP_U9l5TAsD4WUuprY",
+  "AIzaSyAlVQtRKyZwCXeCfjwLXvYkiWo3Ly_pXuM",
+  "AIzaSyB6wfHWsPrJbtP9-UkU0DDC2K2nxkTojlk",
+  "AIzaSyDLje4YehvPkncvBDLmcICnYIuIbQD16fA",
+  "AIzaSyByglEVo4_mzmUZAG0HZZYAa3tlxv5L6pU",
+  "AIzaSyArueFajIY63zciUnkioJbd8zcxkSUeZbU",
+  "AIzaSyCu4W4T_R-7n7tN8jfMoHRJWrrwk6bVn9w",
+  "AIzaSyCfNKkuIBoVkl6mf0IOzyRaSi09sDxrdSk",
+  "AIzaSyCnTdvWTrNk7n28Q-LwZmBZBgHCpDhJ58o",
+  "AIzaSyDpxsQvpqN5s9HQpL6zNTMygBW_4tP5DsY",
+  "AIzaSyDZvYljhrBE-fN7ceWaFqErAXzfyjqOIeU",
+  "AIzaSyAkYvj4ukmvzo9ukqeHAybbozRUZuIaJjc",
+  "AIzaSyDWtSq8If5UIEC7D2uA7sCkZhFchZ-hfjo",
+  "AIzaSyDubRMgg3eUK_XRzQVTp8k_UUZSKJimS9s",
+  "AIzaSyArxFRnyD9cV-qkXSDk7Buh5fkhgMCKIXE",
+  "AIzaSyALaly28nOiUEXEd0H7Vs2m26dnzCvl6zU",
+  "AIzaSyASlN_5kJvNXYto5BXTDvJRRvWpt_dhBW0",
+  "AIzaSyDW1SVoXipuP7_szC2phk5LGThplNNHss8",
+  "AIzaSyCqL5PUZFa7krmdkEfWbC7a9_EB3oIq6kg",
+  "AIzaSyBK-kNydXldsryLlRwKHUYlKAbMElAt64Y",
+  "AIzaSyBwycmu4Jzlqjww2gmb3VkinPX3yq3KkSA",
+  "AIzaSyALhA40vulZZFYxmLMDH3lpVwRs3OhcVJc",
+  "AIzaSyB6EKR-3HRDP1CYbolE65bYLBmDnhSvCJ8",
+  "AIzaSyAGYwccjYZviC2yP3KlTI6C-mQDE4jWr9o",
+  "AIzaSyBk0gBdR12O_7nrZnSUfEKdq-X0_ZrM8lA",
+  "AIzaSyCLZ4xiFZtaNB8O2yiz-1nc3YiIC6Jr_V0",
+  "AIzaSyDa1a2hAfvYQzvqGCH6Nk8qTMCk3O2aCls",
+  "AIzaSyA6eiiLjxXKuH3S750cmV5Gt5GcEkLmbQ8",
+  "AIzaSyCafCTw_Ja7d_ovpI57MxjmyDtTVlgintQ",
+  "AIzaSyDB5lc55kkDEh7nhGRFnHy-xPeffiENFd0",
+  "AIzaSyDeEXtAG4qOV9z20GgDnYRREWPnAMtjlW8",
+  "AIzaSyBpTgfUuODNgYKVbgtGxqCiAjd8lTtnsgI",
+  "AIzaSyB8akwchatPzc8OG6JBd7kh-5MF798Maj4",
+  "AIzaSyDrEkwdLhI0MRPN6dsjF4mJrhBReU32k8A",
+  "AIzaSyDRVJGGv6hpYEItzTpiUW31ym7xM4Nj9qE",
+  "AIzaSyAjmCaL-HItCJYRQi7KdzzbU4wHt0UgHHI",
+  "AIzaSyCE1-Ut41Wmgip49sy4opm4s6HunbOXVzk",
+  "AIzaSyCYlmI4u6zb02g2JOMgSIKHZZMU2jOrV8c",
+  "AIzaSyAS_gpGU0InGtwswGtcMnydHORG43cgl5Q",
+  "AIzaSyB2zdEIwMUI7c7LQYrQYD-rKxXzgi7u_-I",
+  "AIzaSyBvAU1Xy6-PkxzgfIHhxhGH9v3orzxa6PU",
+  "AIzaSyBhalgCaFwcubvI-B-YvIugpUgmddjpbYQ",
+  "AIzaSyCTy_AjF1i3oOe3OsQyifw-M-dbMJF4XtQ",
+  "AIzaSyCnVG19hbVR9CJuBV0Y3_a2cLo6oxw9oTM",
+  "AIzaSyD6hgtpZrICZOFzWZwaDCyXXy_yAg3095c",
+  "AIzaSyBLPrJwYPztz4NltzrOZMIXJ9kvBOXtNMg",
+  "AIzaSyCGulL1HhP-jFcvJ4TAliD-hQBvxC_ijME",
+  "AIzaSyBaQ_jE79BfYxip5Vmrtu-1vxpWOBcnnSA",
+  "AIzaSyDNIzxAd2LD1a8DBC2PqgiLoLPC_nf11Vw",
+  "AIzaSyBVEQnvx3-uwVTN1-HCgCpgp2hXyKf4eLg",
+  "AIzaSyCvnLhM4XWf70enFVo9eeV8YS_crvdd18Y",
+  "AIzaSyBIZfeSx6XmheGBDdc0zN3o1WwoKWDtL_k",
+].filter(k => k); // 过滤掉可能的空字符串
 
-  ];
-
-  // 尝试获取环境变量
-  const envKeys = typeof process !== 'undefined' && process.env ?
-                  process.env.GEMINI_API_KEYS :
-                  (typeof Deno !== 'undefined' ? Deno.env.get('GEMINI_API_KEYS') : null);
-
-  // 合并预设密钥和环境变量中的密钥
-  const envKeyArray = envKeys ?
-    envKeys.split(',').map(k => k.trim()).filter(k => k) :
-    [];
-
-  // 返回所有密钥的去重数组
-  return [...new Set([...predefinedKeys, ...envKeyArray])];
-})();
-
-console.log(`Loaded ${API_KEYS.length} API keys from predefined keys and environment`);
-
-// 密钥轮询计数器
+// 密钥轮询全局索引
 let keyIndex = 0;
 
-// 内存中的运行时密钥集合，用于动态添加的密钥
-const RUNTIME_KEYS = new Set(API_KEYS);
-
-// 获取当前轮换索引对应的密钥 (辅助函数)
+// 辅助函数：获取轮询密钥
 function getApiKeyForRotation(index) {
-    const keyArray = Array.from(RUNTIME_KEYS);
-    if (keyArray.length === 0) {
-        console.error("错误：密钥库中没有可用的 API 密钥。");
-        return null;
-    }
-    // 确保索引有效
-    const validIndex = index % keyArray.length;
-    const key = keyArray[validIndex];
-    // console.log(`为轮换提供索引 ${validIndex} 的密钥: ${key.substring(0, 5)}...`);
-    return key;
-}
-
-// 获取要使用的 API 密钥 (惰性轮换逻辑)
-// 此函数不改变全局 keyIndex
-function getApiKey(providedKey) {
-  // 1. 如果提供了具体密钥，直接使用
-  if (providedKey && providedKey !== "rotate") {
-    // console.log(`使用提供的特定密钥: ${providedKey.substring(0, 5)}...`);
-    return providedKey;
-  }
-  // 2. 否则（请求轮换 "rotate" 或无密钥），返回当前 keyIndex 指向的密钥
-  return getApiKeyForRotation(keyIndex);
-}
-
-// 管理密钥的函数
-async function handleKeyManagement(request, adminKey) {
-  // 检查管理密钥
-  const auth = request.headers.get("X-Admin-Key");
-  if (!auth || auth !== adminKey) {
-    throw new HttpError("Unauthorized. Admin key required.", 401);
-  }
-
-  // 根据请求方法执行不同操作
-  switch (request.method) {
-    case "GET":
-      // 返回所有密钥（注意：实际生产环境中应该隐藏完整密钥）
-      return new Response(JSON.stringify({
-        count: RUNTIME_KEYS.size,
-        keys: Array.from(RUNTIME_KEYS).map(k => k.substring(0, 5) + "..." + k.substring(k.length - 4))
-      }, null, 2), fixCors({ status: 200, headers: { "Content-Type": "application/json" } }));
-
-    case "POST":
-      // 添加新密钥
-      const { key } = await request.json();
-      if (!key) {
-        throw new HttpError("Missing key in request body", 400);
-      }
-      RUNTIME_KEYS.add(key);
-      return new Response(JSON.stringify({ message: "Key added", count: RUNTIME_KEYS.size }),
-        fixCors({ status: 200, headers: { "Content-Type": "application/json" } }));
-
-    case "DELETE":
-      // 删除密钥
-      const { key: keyToDelete } = await request.json();
-      if (!keyToDelete) {
-        throw new HttpError("Missing key in request body", 400);
-      }
-      const deleted = RUNTIME_KEYS.delete(keyToDelete);
-      return new Response(JSON.stringify({
-        message: deleted ? "Key deleted" : "Key not found",
-        count: RUNTIME_KEYS.size
-      }), fixCors({ status: deleted ? 200 : 404, headers: { "Content-Type": "application/json" } }));
-
-    default:
-      throw new HttpError("Method not allowed", 405);
-  }
+  if (API_KEYS.length === 0) return null;
+  return API_KEYS[index % API_KEYS.length];
 }
 
 export default {
   async fetch (request) {
-    // --- 更靠前、更明确的日志记录 ---
-    // console.log(">>> [Worker Log] fetch handler started <<<"); // Removed for brevity
-
-    let pathname = "[URL 解析错误]";
-    try {
-        pathname = new URL(request.url).pathname;
-    } catch (urlError) {
-        console.error(">>> [Worker Log] Error parsing request URL:", urlError);
-    }
-    // console.log(`>>> [Worker Log] Method: ${request.method}, Path: ${pathname}`); // Removed for brevity
-
-    // 记录部分关键请求头
-    const headersToLog = ['Authorization', 'Content-Type', 'User-Agent', 'Accept'];
-    const loggedHeaders = {};
-    for (const headerName of headersToLog) {
-        if (request.headers.has(headerName)) {
-            // 对 Authorization 头进行部分隐藏
-            if (headerName === 'Authorization' && request.headers.get(headerName).includes('Bearer ')) {
-                 const token = request.headers.get(headerName).split(' ')[1];
-                 loggedHeaders[headerName] = `Bearer ${token.substring(0, 5)}...${token.substring(token.length - 4)}`;
-            } else {
-                 loggedHeaders[headerName] = request.headers.get(headerName);
-            }
-        }
-    }
-    // console.log(`>>> [Worker Log] Headers (partial): ${JSON.stringify(loggedHeaders)}`); // Removed for brevity
-
-    // --- Request Body Logging Removed for performance ---
-
     if (request.method === "OPTIONS") {
       return handleOPTIONS();
     }
-    const errHandler = (err) => {
+
+    const errHandler = (err, status = 500) => {
       console.error("错误处理程序捕获:", err);
-      // 确保即使在错误情况下也返回 CORS 头部
-      const status = err instanceof HttpError ? err.status : 500;
+      const errorStatus = err instanceof HttpError ? err.status : status;
       const message = err instanceof Error ? err.message : String(err);
-      return new Response(JSON.stringify({ error: { message, type: err.name, code: status } }), fixCors({ status }));
+      // 返回 JSON 格式的错误信息
+      return new Response(JSON.stringify({ error: { message, type: err.name, code: errorStatus } }), fixCors({ status: errorStatus, headers: { "Content-Type": "application/json" } }));
     };
 
     try {
       const { pathname } = new URL(request.url);
-
-      // --- 密钥管理端点处理 ---
-      if (pathname.endsWith("/admin/keys")) {
-        const adminKey = typeof process !== 'undefined' && process.env ?
-                  process.env.ADMIN_KEY :
-                  (typeof Deno !== 'undefined' ? Deno.env.get('ADMIN_KEY') : null);
-
-        if (!adminKey) {
-          throw new HttpError("Admin key not configured on server", 500);
-        }
-        // 管理端点不参与重试逻辑
-        return await handleKeyManagement(request, adminKey).catch(errHandler);
-      }
-
-      // --- API 请求处理与重试逻辑 ---
       const auth = request.headers.get("Authorization");
       const providedKey = auth?.split(" ")[1];
-      const isRotating = !providedKey || providedKey === "rotate"; // 判断是否启用轮换/重试模式
 
-      const keyArrayForMaxAttempts = Array.from(RUNTIME_KEYS); // 用于确定最大尝试次数
-      const maxAttempts = isRotating ? keyArrayForMaxAttempts.length * 3 : 1; // 最多轮询 3 轮
-      let lastErrorResponse = null;
+      // 确定是否使用轮询模式
+      // 如果没有提供 key 或者 key 是 "rotate"，则使用轮询
+      const isRotating = (!providedKey || providedKey === "rotate") && API_KEYS.length > 0;
+
       let attempts = 0;
-      let currentKeyIndex = keyIndex; // 本次请求开始时的索引，仅在轮换失败时递增
+      const maxAttempts = isRotating ? API_KEYS.length * 3 : 1; // 最多轮询 3 轮
+      let currentKeyIndex = keyIndex; // 本次请求尝试的起始索引
+      let lastErrorResponse = null;
 
-      // console.log(`开始处理请求 ${pathname}. 轮换模式: ${isRotating}, 最大尝试次数: ${maxAttempts} (最多3轮), 初始索引: ${currentKeyIndex}`); // Removed for brevity
+      console.log(`开始处理请求 ${pathname}. 模式: ${isRotating ? '轮询' : '指定密钥'}. 最大尝试: ${maxAttempts}.`);
 
       while (attempts < maxAttempts) {
         attempts++;
-        // 获取当前尝试使用的密钥
-        const apiKey = getApiKey(providedKey === "rotate" ? getApiKeyForRotation(currentKeyIndex) : providedKey);
+        let apiKeyToUse;
 
-        if (!apiKey) {
-          console.error(`尝试 ${attempts}: 未能获取到 API 密钥 (索引 ${currentKeyIndex})。`);
-          if (!lastErrorResponse) { // 如果是第一次尝试就没key
-             throw new HttpError("No API key available.", 500);
-          } else { // 如果是重试中发现没key了（例如被动态删除了）
-             break; // 结束重试，返回上一个错误
+        if (isRotating) {
+          apiKeyToUse = getApiKeyForRotation(currentKeyIndex);
+          if (!apiKeyToUse) {
+             console.error(`轮询尝试 ${attempts}: 无法获取密钥 (索引 ${currentKeyIndex})，密钥库可能为空或已被清空。`);
+             // 如果第一次尝试就失败，则抛出错误；否则跳出循环，使用上一次错误
+             if (!lastErrorResponse) throw new HttpError("No API keys available for rotation.", 500);
+             break;
           }
+          const currentRound = Math.floor((currentKeyIndex % (API_KEYS.length * 3)) / API_KEYS.length) + 1;
+          console.log(`轮次 ${currentRound}/3 | 尝试 ${attempts}/${maxAttempts} | 密钥索引 ${currentKeyIndex % API_KEYS.length} (...${apiKeyToUse.slice(-4)})`);
+        } else {
+          apiKeyToUse = providedKey; // 使用用户提供的特定密钥
+          if (!apiKeyToUse) {
+            // 如果用户没提供密钥，并且密钥库为空，则出错
+            if (API_KEYS.length === 0) {
+               throw new HttpError("Authorization header is missing and no fallback API keys available.", 401);
+            } else {
+               // 理论上不应到达这里，因为 isRotating 会是 true
+               console.warn("未提供密钥，但未进入轮询模式？回退到第一个密钥。");
+               apiKeyToUse = API_KEYS[0];
+            }
+          }
+           console.log(`尝试 ${attempts}/${maxAttempts} | 使用指定密钥 (...${apiKeyToUse.slice(-4)})`);
         }
-        const currentRound = keyArrayForMaxAttempts.length > 0 ? Math.floor((attempts - 1) / keyArrayForMaxAttempts.length) + 1 : 1;
-        // 保留此日志以显示正在尝试哪个密钥
-        console.log(`轮次 ${currentRound}/3 | 尝试 ${attempts}/${maxAttempts} | 密钥 ...${apiKey.slice(-6)}`); // 显示密钥后6位
 
-        // 克隆请求对象，因为 body 只能读取一次
-        const clonedRequest = request.clone();
+        // 克隆请求以备重试，因为 body 只能读一次 (GET 不需要)
+        const clonedRequest = request.method !== "GET" ? request.clone() : request;
         let response;
 
         try {
-          // --- 根据路径调用相应的处理函数 ---
           const assert = (success) => {
             if (!success) {
-              throw new HttpError("The specified HTTP method is not allowed for the requested resource", 405); // 405 Method Not Allowed 更合适
+              throw new HttpError(`Method ${request.method} not allowed for ${pathname}`, 405);
             }
           };
 
+          // --- 调用核心处理逻辑 ---
           switch (true) {
             case pathname.endsWith("/chat/completions"):
-              assert(clonedRequest.method === "POST");
-              response = await handleCompletions(await clonedRequest.json(), apiKey);
+              assert(request.method === "POST");
+              response = await handleCompletions(await clonedRequest.json(), apiKeyToUse);
               break;
             case pathname.endsWith("/embeddings"):
-              assert(clonedRequest.method === "POST");
-              response = await handleEmbeddings(await clonedRequest.json(), apiKey);
+              assert(request.method === "POST");
+              response = await handleEmbeddings(await clonedRequest.json(), apiKeyToUse);
               break;
             case pathname.endsWith("/models"):
-              assert(clonedRequest.method === "GET");
-              response = await handleModels(apiKey); // GET 请求不需要读取 body，无需克隆的 json()
+              assert(request.method === "GET");
+              response = await handleModels(apiKeyToUse);
               break;
             default:
-              // 如果之前的尝试有错误，返回那个错误，否则返回 404
-              if (lastErrorResponse) {
-                 response = lastErrorResponse;
-                 break; // 跳出 switch
-              }
-              throw new HttpError("404 Not Found", 404);
+              // 如果是第一次尝试就路径错误，则 404
+              if (attempts === 1) throw new HttpError("404 Not Found", 404);
+              // 如果是重试中路径错误（理论上不应发生），则使用上一个错误
+              response = lastErrorResponse ?? new HttpError("404 Not Found during retry", 404);
+              break; // 跳出 switch
           }
 
-          // --- 检查响应 ---
+          // --- 处理响应 ---
           if (response.ok) {
-            // console.log(`尝试 ${attempts} 成功，状态码: ${response.status}`); // Removed for brevity, only log errors
-            // 成功时，更新全局 keyIndex 指向这个成功的密钥索引
-            // 这样下次 rotate 请求会优先使用这个成功的密钥
+            console.log(`尝试 ${attempts} 成功 (状态码 ${response.status})`);
             if (isRotating) {
-                keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 更新全局索引
-                console.log(`请求成功，全局 keyIndex 更新为 ${keyIndex}`);
+              // 成功，更新全局 keyIndex 指向当前成功的索引
+              keyIndex = currentKeyIndex % API_KEYS.length;
+              console.log(`轮询成功，全局 keyIndex 更新为 ${keyIndex}`);
             }
-            return response; // 成功，直接返回
+            return response; // 成功，返回响应
           }
 
-          // --- 处理失败响应 ---
-          console.warn(`尝试 ${attempts} 失败，状态码: ${response.status}`);
-          lastErrorResponse = response.clone(); // 保存错误响应副本以备后用
+          // --- 处理失败 ---
+          console.warn(`尝试 ${attempts} 失败 (状态码 ${response.status})`);
+          lastErrorResponse = response.clone(); // 保存错误响应副本
 
-          // 检查是否是可重试的错误且处于轮换模式
-          // 新增 404 和 500 作为可重试错误
-          const shouldRetry = isRotating && [400, 429, 404, 500].includes(response.status);
+          // 检查是否应该重试 (仅在轮询模式下对特定错误重试)
+          const shouldRetry = isRotating && [400, 429, 500].includes(response.status); // 仅重试 400, 429, 500
 
           if (shouldRetry) {
-            // console.log(`遇到可重试错误 (状态码 ${response.status}) 且处于轮换模式，递增密钥索引并准备重试...`); // Removed for brevity, failure log is sufficient
-            // 只有在需要重试时才递增索引
-            currentKeyIndex++; // 下次循环将使用下一个索引的密钥 (取模运算会自动处理绕回)
-            // keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 可选：更新全局索引
-            // 保持注释，实现惰性轮换：下次新请求仍从上次成功或初始的 key 开始
-            // 继续下一次循环
+            currentKeyIndex++; // 递增索引，准备用下一个密钥重试
+            // 短暂延迟避免立即重试（可选）
+            // await new Promise(resolve => setTimeout(resolve, 100));
           } else {
-            // console.log(`遇到不可重试错误 (状态码 ${response.status})、非轮换模式或请求成功，将返回当前响应。`); // Removed for brevity
-            // 如果成功，keyIndex 保持不变。下次 rotate 请求将继续使用这个成功的 key。
-            return response; // 不可重试、非轮换模式或成功，直接返回当前响应
+            console.log(`非轮询模式或遇到不可重试错误 (状态码 ${response.status})，返回当前错误响应。`);
+            return response; // 不重试，直接返回当前错误响应
           }
 
         } catch (innerErr) {
-           // 捕获 handleCompletions/Embeddings/Models 内部可能抛出的错误
-           console.error(`尝试 ${attempts} 时内部处理函数出错:`, innerErr);
-           const status = innerErr instanceof HttpError ? innerErr.status : 500;
-           lastErrorResponse = new Response(JSON.stringify({ error: { message: innerErr.message, type: innerErr.name, code: status } }), fixCors({ status }));
+          // 捕获 handle... 函数内部或 assert 抛出的错误
+          console.error(`尝试 ${attempts} 时内部处理出错:`, innerErr);
+          const status = innerErr instanceof HttpError ? innerErr.status : 500;
+          lastErrorResponse = errHandler(innerErr, status); // 使用 errHandler 创建错误响应
 
-           // 检查是否是可重试的错误且处于轮换模式
-           // 新增 404 和 500 作为可重试错误
-           const shouldRetryFromInnerError = isRotating && [400, 429, 404, 500].includes(status);
+          // 检查是否应该重试 (仅在轮询模式下对特定错误重试)
+          const shouldRetryFromInnerError = isRotating && [400, 429, 500].includes(status);
 
-           if (shouldRetryFromInnerError) {
-               // console.log(`内部错误可重试 (状态码 ${status}) 且处于轮换模式，递增密钥索引并准备重试...`); // Removed for brevity
-               currentKeyIndex++; // 递增索引以尝试下一个密钥 (取模运算会自动处理绕回)
-               // keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 可选：更新全局索引
-           } else {
-               // console.log(`内部错误不可重试 (状态码 ${status}) 或非轮换模式，返回错误。`); // Removed for brevity
-               return lastErrorResponse; // 不可重试或非轮换模式，返回错误
-           }
-           // 继续循环
+          if (shouldRetryFromInnerError) {
+            currentKeyIndex++; // 递增索引，准备用下一个密钥重试
+          } else {
+            console.log(`内部错误不可重试 (状态码 ${status}) 或非轮询模式，返回错误响应。`);
+            return lastErrorResponse; // 不重试，返回错误响应
+          }
         }
       } // end while loop
 
-      // 如果循环结束仍未成功（尝试了所有密钥）
-      console.warn(`在 ${maxAttempts} 次尝试 (最多3轮轮询) 后均失败，返回最后记录的错误。`);
-      return lastErrorResponse ?? new Response(JSON.stringify({ error: { message: `All API key attempts failed after ${maxAttempts} tries (up to 3 rounds).`, type: "RetryError", code: 500 } }), fixCors({ status: 500 })); // 如果连 lastErrorResponse 都没有，返回通用错误
+      // 如果循环结束仍未成功
+      console.error(`所有 ${maxAttempts} 次尝试 (最多 3 轮) 均失败。返回最后记录的错误。`);
+      return lastErrorResponse ?? errHandler(new HttpError(`All API key attempts failed after ${maxAttempts} tries.`, 500));
 
     } catch (err) {
-      // 捕获 fetch 函数顶层的错误 (例如 URL 解析错误)
+      // 捕获顶层错误 (如 new URL 失败)
       return errHandler(err);
     }
   }
@@ -374,19 +246,15 @@ class HttpError extends Error {
 const fixCors = ({ headers, status, statusText }) => {
   headers = new Headers(headers);
   headers.set("Access-Control-Allow-Origin", "*");
-  headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // 明确允许的方法
-  headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type, x-goog-api-client, X-Admin-Key"); // 添加 X-Admin-Key
   return { headers, status, statusText };
 };
 
 const handleOPTIONS = async () => {
   return new Response(null, {
-    status: 204, // No Content for preflight
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS", // 添加 DELETE
-      "Access-Control-Allow-Headers": "Authorization, Content-Type, x-goog-api-client, X-Admin-Key", // 添加 X-Admin-Key
-      "Access-Control-Max-Age": "86400", // 缓存预检结果一天
+      "Access-Control-Allow-Methods": "*",
+      "Access-Control-Allow-Headers": "*",
     }
   });
 };
@@ -396,7 +264,7 @@ const API_VERSION = "v1beta";
 
 // https://github.com/google-gemini/generative-ai-js/blob/cf223ff4a1ee5a2d944c53cddb8976136382bee6/src/requests/request.ts#L71
 const API_CLIENT = "genai-js/0.21.0"; // npm view @google/generative-ai version
-const makeHeaders = (apiKey, more = {}) => ({
+const makeHeaders = (apiKey, more) => ({
   "x-goog-api-client": API_CLIENT,
   ...(apiKey && { "x-goog-api-key": apiKey }),
   ...more
@@ -406,303 +274,121 @@ async function handleModels (apiKey) {
   const response = await fetch(`${BASE_URL}/${API_VERSION}/models`, {
     headers: makeHeaders(apiKey),
   });
-  let body = await response.text(); // 先获取文本
+  let { body } = response;
   if (response.ok) {
-    try {
-        const { models } = JSON.parse(body);
-        body = JSON.stringify({
-          object: "list",
-          data: models.map(({ name }) => ({
-            id: name.replace("models/", ""),
-            object: "model",
-            created: 0,
-            owned_by: "google", // 明确所有者
-          })),
-        }, null, "  ");
-    } catch (e) {
-        console.error("Error parsing models response:", e);
-        // 保留原始 body，但可能不是有效的 JSON
-        // 返回原始 response 让上层处理
-    }
+    const { models } = JSON.parse(await response.text());
+    body = JSON.stringify({
+      object: "list",
+      data: models.map(({ name }) => ({
+        id: name.replace("models/", ""),
+        object: "model",
+        created: 0,
+        owned_by: "",
+      })),
+    }, null, "  ");
   }
-  // 无论是否 OK，都返回（可能已修改的）body 和原始 response 的状态/头部
   return new Response(body, fixCors(response));
 }
 
 const DEFAULT_EMBEDDINGS_MODEL = "text-embedding-004";
 async function handleEmbeddings (req, apiKey) {
-  if (typeof req.model !== "string" || !req.model) {
-    // 如果模型未指定或为空，使用默认值
-    req.model = DEFAULT_EMBEDDINGS_MODEL;
-    console.log(`Model not specified, using default: ${DEFAULT_EMBEDDINGS_MODEL}`);
-  }
-  if (!req.input) {
-      throw new HttpError("input is missing", 400);
+  if (typeof req.model !== "string") {
+    throw new HttpError("model is not specified", 400);
   }
   if (!Array.isArray(req.input)) {
     req.input = [ req.input ];
   }
-   if (req.input.length === 0 || req.input.some(i => typeof i !== 'string' || !i)) {
-      throw new HttpError("input must be a non-empty string or an array of non-empty strings", 400);
-  }
-
   let model;
   if (req.model.startsWith("models/")) {
     model = req.model;
   } else {
-    model = "models/" + req.model; // 使用用户指定的或默认的模型名称
+    req.model = DEFAULT_EMBEDDINGS_MODEL;
+    model = "models/" + req.model;
   }
-
-  const requestBody = JSON.stringify({
-      "requests": req.input.map(text => ({
-        model,
-        content: { parts: [{ text }] }, // 确保 parts 是数组
-        ...(req.dimensions && { outputDimensionality: req.dimensions }) // 仅在提供时添加维度
-      }))
-    });
-
   const response = await fetch(`${BASE_URL}/${API_VERSION}/${model}:batchEmbedContents`, {
     method: "POST",
     headers: makeHeaders(apiKey, { "Content-Type": "application/json" }),
-    body: requestBody
+    body: JSON.stringify({
+      "requests": req.input.map(text => ({
+        model,
+        content: { parts: { text } },
+        outputDimensionality: req.dimensions,
+      }))
+    })
   });
-
-  let body = await response.text();
+  let { body } = response;
   if (response.ok) {
-    try {
-        const { embeddings } = JSON.parse(body);
-        if (!embeddings) throw new Error("Embeddings field missing in response");
-        body = JSON.stringify({
-          object: "list",
-          data: embeddings.map(({ values }, index) => ({
-            object: "embedding",
-            index,
-            embedding: values,
-          })),
-          model: req.model, // 返回用户请求的模型
-          usage: { prompt_tokens: 0, total_tokens: 0 } // OpenAI 格式需要 usage
-        }, null, "  ");
-    } catch(e) {
-        console.error("Error processing embeddings response:", e);
-        // 返回原始 response 让上层处理
-    }
+    const { embeddings } = JSON.parse(await response.text());
+    body = JSON.stringify({
+      object: "list",
+      data: embeddings.map(({ values }, index) => ({
+        object: "embedding",
+        index,
+        embedding: values,
+      })),
+      model: req.model,
+    }, null, "  ");
   }
   return new Response(body, fixCors(response));
 }
 
-const DEFAULT_MODEL = "gemini-1.5-flash-latest"; // 使用 flash 作为默认
+const DEFAULT_MODEL = "gemini-2.0-flash";
 async function handleCompletions (req, apiKey) {
   let model = DEFAULT_MODEL;
-  if (typeof req.model === "string" && req.model.trim() !== "") {
-      if (req.model.startsWith("models/")) {
-          model = req.model.substring(7);
-      } else {
-          model = req.model; // 接受用户指定的模型名称
-      }
+  switch (true) {
+    case typeof req.model !== "string":
+      break;
+    case req.model.startsWith("models/"):
+      model = req.model.substring(7);
+      break;
+    case req.model.startsWith("gemini-"):
+    case req.model.startsWith("gemma-"):
+    case req.model.startsWith("learnlm-"):
+      model = req.model;
   }
-
-  let requestBodyPayload;
-  try {
-      requestBodyPayload = await transformRequest(req);
-  } catch (e) {
-      if (e instanceof HttpError) throw e;
-      console.error("Error transforming request:", e);
-      throw new HttpError("Failed to transform request payload", 400);
+  let body = await transformRequest(req);
+  switch (true) {
+    case model.endsWith(":search"):
+      model = model.substring(0, model.length - 7);
+      // eslint-disable-next-line no-fallthrough
+    case req.model.endsWith("-search-preview"):
+      body.tools = body.tools || [];
+      body.tools.push({googleSearch: {}});
   }
-
-  // 处理 search 功能 (如果需要)
-  let effectiveModel = model;
-  // ... (search logic can be added here if needed, similar to previous version)
-
   const TASK = req.stream ? "streamGenerateContent" : "generateContent";
-  let url = `${BASE_URL}/${API_VERSION}/models/${effectiveModel}:${TASK}`;
+  let url = `${BASE_URL}/${API_VERSION}/models/${model}:${TASK}`;
   if (req.stream) { url += "?alt=sse"; }
-
   const response = await fetch(url, {
     method: "POST",
     headers: makeHeaders(apiKey, { "Content-Type": "application/json" }),
-    body: JSON.stringify(requestBodyPayload),
+    body: JSON.stringify(body),
   });
 
-  let responseBody = response.body; // 默认使用原始 body (用于流或错误)
+  body = response.body;
   if (response.ok) {
-    let id = generateChatcmplId();
+    let id = generateChatcmplId(); //"chatcmpl-8pMMaqXMK68B3nyDBrapTDrhkHBQK";
     if (req.stream) {
-      responseBody = response.body
+      body = response.body
         .pipeThrough(new TextDecoderStream())
-        .pipeThrough(new TransformStream(new SseParser())) // 使用类实例
-        .pipeThrough(new TransformStream(new OpenAiStreamTransformer(req.stream_options?.include_usage, model, id))) // 使用类实例
+        .pipeThrough(new TransformStream({
+          transform: parseStream,
+          flush: parseStreamFlush,
+          buffer: "",
+        }))
+        .pipeThrough(new TransformStream({
+          transform: toOpenAiStream,
+          flush: toOpenAiStreamFlush,
+          streamIncludeUsage: req.stream_options?.include_usage,
+          model, id, last: [],
+        }))
         .pipeThrough(new TextEncoderStream());
-      // 对于流式响应，直接返回转换后的流
-      return new Response(responseBody, fixCors(response));
     } else {
-      // 非流式成功响应
-      const responseText = await response.text();
-      try {
-          const jsonData = JSON.parse(responseText);
-          // 检查 jsonData 和 jsonData.candidates
-          if (!jsonData || !Array.isArray(jsonData.candidates)) {
-              console.error("Invalid non-stream response structure:", jsonData);
-              throw new HttpError("Invalid response structure from upstream API", 502); // 抛出错误让上层捕获
-          }
-          responseBody = processCompletionsResponse(jsonData, model, id);
-          // 成功处理，返回新的 Response
-          return new Response(responseBody, fixCors(response));
-      } catch (e) {
-          console.error("Error processing non-stream response:", e);
-          // 处理出错，也抛出错误
-          throw new HttpError(`Error processing upstream response: ${e.message}`, 502);
-      }
+      body = await response.text();
+      body = processCompletionsResponse(JSON.parse(body), model, id);
     }
   }
-  // 如果 response.ok 为 false，直接返回原始 response (包含错误信息)
-  // 不需要 new Response()，因为原始 response 包含了状态码和头部
-  return response;
+  return new Response(body, fixCors(response));
 }
-
-// --- Helper Classes for Streaming (Copied from previous version, ensure they are correct) ---
-
-class SseParser {
-    constructor() {
-        this.buffer = "";
-        this.responseLineRE = /^data: (.*)(?:\n\n|\r\r|\r\n\r\n)/;
-    }
-    transform(chunk, controller) {
-        this.buffer += chunk;
-        let match;
-        while ((match = this.buffer.match(this.responseLineRE))) {
-            controller.enqueue(match[1]);
-            this.buffer = this.buffer.substring(match[0].length);
-        }
-    }
-    flush(controller) {
-        if (this.buffer) {
-            try {
-                // 尝试去除可能的 "data: " 前缀并解析
-                const potentialJson = this.buffer.startsWith("data: ") ? this.buffer.substring(6) : this.buffer;
-                const jsonData = JSON.parse(potentialJson);
-                controller.enqueue(JSON.stringify(jsonData)); // 重新序列化以保持一致
-            } catch (e) {
-                console.error("Invalid trailing data in SSE stream:", this.buffer);
-            }
-        }
-    }
-}
-
-class OpenAiStreamTransformer {
-    constructor(streamIncludeUsage, model, id) {
-        this.streamIncludeUsage = streamIncludeUsage;
-        this.model = model;
-        this.id = id;
-        this.last = []; // 存储每个 candidate 的最后状态
-        this.delimiter = "\n\n";
-    }
-
-    transformResponseStream(data, special) {
-        if (!data || !Array.isArray(data.candidates) || data.candidates.length === 0) {
-            console.error("Invalid data structure received in stream transformer:", data);
-            return ""; // 返回空字符串避免中断流
-        }
-
-        const candidateIndex = data.candidates[0].index === undefined ? 0 : data.candidates[0].index;
-        const item = transformCandidatesDelta(data.candidates[0]); // 使用外部函数
-
-        switch (special) {
-            case "stop":
-                if (item.delta.tool_calls) {
-                    item.finish_reason = "tool_calls";
-                } else if (!item.finish_reason) {
-                    // 如果 Gemini 没有提供 finishReason，且不是 tool_calls，则默认为 stop
-                    item.finish_reason = item.finish_reason || "stop";
-                }
-                item.delta = {}; // 清空 delta 表示结束
-                break;
-            case "first":
-                item.finish_reason = null;
-                item.delta = item.delta || {};
-                if (!item.delta.tool_calls && item.delta.content === undefined) {
-                   item.delta.content = "";
-                }
-                break;
-            default: // Normal chunk
-                item.finish_reason = null;
-                delete item.delta.role;
-        }
-
-        const output = {
-            id: this.id,
-            choices: [item],
-            created: Math.floor(Date.now() / 1000),
-            model: this.model,
-            object: "chat.completion.chunk",
-        };
-
-        if (this.streamIncludeUsage) {
-             output.usage = special === "stop" && data.usageMetadata ? transformUsage(data.usageMetadata) : null;
-        }
-
-        return "data: " + JSON.stringify(output) + this.delimiter;
-    }
-
-
-    transform(line, controller) {
-        let data;
-        try {
-            data = JSON.parse(line);
-        } catch (err) {
-            console.error("Error parsing stream line:", line, err);
-            const errorCandidate = {
-                index: this.last.length,
-                finishReason: "error",
-                delta: { content: `Error parsing stream: ${err.message}` }
-            };
-             const errorData = { candidates: [errorCandidate] };
-             controller.enqueue(this.transformResponseStream(errorData, "error"));
-            return;
-        }
-
-         if (!data || !Array.isArray(data.candidates) || data.candidates.length === 0) {
-            console.warn("Received stream chunk with no candidates:", data);
-            return; // 忽略无效块
-        }
-
-        const cand = data.candidates[0];
-        const index = cand.index === undefined ? 0 : cand.index;
-
-        while (this.last.length <= index) {
-            this.last.push(null);
-        }
-
-        if (!this.last[index]) { // 该 candidate 的第一帧
-            controller.enqueue(this.transformResponseStream(data, "first"));
-        }
-
-        this.last[index] = data; // 存储最后状态
-
-        // 只有当 candidate 包含实际内容或 tool_calls 时才发送普通帧
-        const hasContent = cand.content && cand.content.parts && cand.content.parts.some(p => p.text || p.functionCall);
-        const hasToolCalls = cand.tool_calls || (cand.content && cand.content.parts && cand.content.parts.some(p => p.functionCall));
-
-        if (hasContent || hasToolCalls) {
-             controller.enqueue(this.transformResponseStream(data));
-        }
-    }
-
-    flush(controller) {
-        if (this.last.length > 0) {
-            this.last.forEach((data, index) => {
-                if (data) { // 确保 data 存在
-                   controller.enqueue(this.transformResponseStream(data, "stop"));
-                }
-            });
-        }
-        // 总是发送 DONE 消息
-        controller.enqueue("data: [DONE]" + this.delimiter);
-    }
-}
-
-
-// --- Transformation Logic (Copied from previous version, ensure correctness) ---
 
 const adjustProps = (schemaPart) => {
   if (typeof schemaPart !== "object" || schemaPart === null) {
@@ -718,68 +404,60 @@ const adjustProps = (schemaPart) => {
   }
 };
 const adjustSchema = (schema) => {
-    if (!schema || !schema.type || !schema[schema.type]) return;
-    const obj = schema[schema.type];
-    if (obj) {
-        delete obj.strict;
-    }
-    adjustProps(schema);
+  const obj = schema[schema.type];
+  delete obj.strict;
+  return adjustProps(schema);
 };
-
 
 const harmCategory = [
   "HARM_CATEGORY_HATE_SPEECH",
   "HARM_CATEGORY_SEXUALLY_EXPLICIT",
   "HARM_CATEGORY_DANGEROUS_CONTENT",
   "HARM_CATEGORY_HARASSMENT",
-  "HARM_CATEGORY_UNSPECIFIED"
+  "HARM_CATEGORY_CIVIC_INTEGRITY",
 ];
 const safetySettings = harmCategory.map(category => ({
   category,
   threshold: "BLOCK_NONE",
 }));
-
 const fieldsMap = {
   stop: "stopSequences",
-  n: "candidateCount",
+  n: "candidateCount", // not for streaming
   max_tokens: "maxOutputTokens",
+  max_completion_tokens: "maxOutputTokens",
   temperature: "temperature",
   top_p: "topP",
-  top_k: "topK",
+  top_k: "topK", // non-standard
+  frequency_penalty: "frequencyPenalty",
+  presence_penalty: "presencePenalty",
 };
 const transformConfig = (req) => {
   let cfg = {};
+  //if (typeof req.stop === "string") { req.stop = [req.stop]; } // no need
   for (let key in req) {
     const matchedKey = fieldsMap[key];
     if (matchedKey) {
-        const value = req[key];
-         if (key === 'temperature' && (value < 0 || value > 2)) continue;
-         if (key === 'top_p' && (value < 0 || value > 1)) continue;
-         if (key === 'top_k' && (!Number.isInteger(value) || value < 1)) continue;
-         if (key === 'max_tokens' && (!Number.isInteger(value) || value < 1)) continue;
-         if (key === 'n' && (!Number.isInteger(value) || value < 1)) continue;
-         if (key === 'stop') {
-             if (typeof value === 'string') cfg[matchedKey] = [value];
-             else if (Array.isArray(value) && value.every(s => typeof s === 'string')) cfg[matchedKey] = value;
-             continue;
-         }
       cfg[matchedKey] = req[key];
     }
   }
-
   if (req.response_format) {
     switch (req.response_format.type) {
       case "json_schema":
-         cfg.responseMimeType = "application/json";
-         console.warn("json_schema format requested, using standard JSON mode for Gemini.");
-        break;
+        adjustSchema(req.response_format);
+        cfg.responseSchema = req.response_format.json_schema?.schema;
+        if (cfg.responseSchema && "enum" in cfg.responseSchema) {
+          cfg.responseMimeType = "text/x.enum";
+          break;
+        }
+        // eslint-disable-next-line no-fallthrough
       case "json_object":
         cfg.responseMimeType = "application/json";
         break;
       case "text":
+        cfg.responseMimeType = "text/plain";
         break;
       default:
-        console.warn(`Unsupported response_format type: ${req.response_format.type}. Ignoring.`);
+        throw new HttpError("Unsupported response_format.type", 400);
     }
   }
   return cfg;
@@ -791,35 +469,19 @@ const parseImg = async (url) => {
     try {
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} (${url})`);
+        throw new Error(`${response.status} ${response.statusText} (${url})`);
       }
       mimeType = response.headers.get("content-type");
-      if (!mimeType) throw new Error("Content-Type header missing for image URL");
-      const contentLength = response.headers.get("content-length");
-      if (contentLength && parseInt(contentLength, 10) > 10 * 1024 * 1024) {
-          throw new Error("Image size exceeds the 10MB limit.");
-      }
-      const buffer = await response.arrayBuffer();
-       if (buffer.byteLength > 10 * 1024 * 1024) {
-           throw new Error("Image size exceeds the 10MB limit.");
-       }
-      data = Buffer.from(buffer).toString("base64");
+      data = Buffer.from(await response.arrayBuffer()).toString("base64");
     } catch (err) {
-      console.error("Error fetching image:", err);
-      throw new HttpError("Error fetching or processing image URL: " + err.message, 400);
+      throw new Error("Error fetching image: " + err.toString());
     }
-  } else if (url.startsWith("data:")) {
-    const match = url.match(/^data:(?<mimeType>image\/.*?)(?:;base64)?,(?<data>.*)$/);
-    if (!match || !match.groups.mimeType || !match.groups.data) {
-      throw new HttpError("Invalid image data URI format.", 400);
+  } else {
+    const match = url.match(/^data:(?<mimeType>.*?)(;base64)?,(?<data>.*)$/);
+    if (!match) {
+      throw new HttpError("Invalid image data: " + url, 400);
     }
     ({ mimeType, data } = match.groups);
-     const dataLength = data.length * 3 / 4;
-     if (dataLength > 10 * 1024 * 1024) {
-         throw new HttpError("Image size in data URI exceeds the 10MB limit.");
-     }
-  } else {
-      throw new HttpError("Unsupported image URL format. Must be http(s) or data URI.", 400);
   }
   return {
     inlineData: {
@@ -829,225 +491,149 @@ const parseImg = async (url) => {
   };
 };
 
-const transformMsg = async ({ content, tool_calls, tool_call_id, name }, fnames) => {
+const transformMsg = async ({ content, tool_calls, tool_call_id }, fnames) => {
   const parts = [];
-
   if (tool_call_id !== undefined) {
-    let responseContent;
+    let response;
     try {
-        responseContent = typeof content === 'string' ? JSON.parse(content) : content;
-        if (typeof responseContent !== 'object' || responseContent === null) {
-             responseContent = { result: responseContent };
-        }
+      response = JSON.parse(content);
     } catch (err) {
-      console.error("Error parsing tool response content:", content, err);
-      throw new HttpError("Invalid tool response content: " + content, 400);
+      console.error("Error parsing function response content:", err);
+      throw new HttpError("Invalid function response: " + content, 400);
     }
-    const functionName = fnames[tool_call_id] || name;
-    if (!functionName) {
-        console.error("Could not determine function name for tool call ID:", tool_call_id);
-        throw new HttpError("Missing function name for tool response.", 400);
+    if (typeof response !== "object" || response === null || Array.isArray(response)) {
+      response = { result: response };
     }
     parts.push({
       functionResponse: {
-        name: functionName,
-        response: responseContent,
+        id: tool_call_id.startsWith("{") ? null : tool_call_id,
+        name: fnames[tool_call_id],
+        response,
       }
     });
     return parts;
   }
-
   if (tool_calls) {
     for (const tcall of tool_calls) {
       if (tcall.type !== "function") {
-        console.warn(`Unsupported tool_call type: "${tcall.type}". Skipping.`);
-        continue;
+        throw new HttpError(`Unsupported tool_call type: "${tcall.type}"`, 400);
       }
-      const { function: { arguments: argstr, name: funcName }, id } = tcall;
+      const { function: { arguments: argstr, name }, id } = tcall;
       let args;
       try {
         args = JSON.parse(argstr);
       } catch (err) {
-        console.error("Error parsing function arguments:", argstr, err);
-        throw new HttpError("Invalid function arguments format: " + argstr, 400);
+        console.error("Error parsing function arguments:", err);
+        throw new HttpError("Invalid function arguments: " + argstr, 400);
       }
       parts.push({
         functionCall: {
-          name: funcName,
+          id: id.startsWith("{") ? null : id,
+          name,
           args,
         }
       });
-      fnames[id] = funcName;
-    }
-    if (typeof content === 'string' && content.trim() !== '') {
-         parts.push({ text: content });
+      fnames[id] = name;
     }
     return parts;
   }
-
-  if (typeof content === 'string') {
+  if (!Array.isArray(content)) {
+    // system, user: string
+    // assistant: string or null (Required unless tool_calls is specified.)
     parts.push({ text: content });
-  } else if (Array.isArray(content)) {
-    for (const item of content) {
-      switch (item.type) {
-        case "text":
-          parts.push({ text: item.text });
-          break;
-        case "image_url":
-           try {
-               parts.push(await parseImg(item.image_url.url));
-           } catch (e) {
-               console.error("Failed to process image_url:", e);
-               throw e;
-           }
-          break;
-        default:
-          console.warn(`Unknown content part type: "${item.type}". Skipping.`);
-      }
-    }
-    if (content.length > 0 && !content.some(item => item.type === "text")) {
-      parts.push({ text: "" });
-    }
-  } else if (content === null && !tool_calls) {
-      console.warn("Assistant message has null content and no tool_calls.");
-      parts.push({ text: "" });
+    return parts;
   }
-
+  // user:
+  // An array of content parts with a defined type.
+  // Supported options differ based on the model being used to generate the response.
+  // Can contain text, image, or audio inputs.
+  for (const item of content) {
+    switch (item.type) {
+      case "text":
+        parts.push({ text: item.text });
+        break;
+      case "image_url":
+        parts.push(await parseImg(item.image_url.url));
+        break;
+      case "input_audio":
+        parts.push({
+          inlineData: {
+            mimeType: "audio/" + item.input_audio.format,
+            data: item.input_audio.data,
+          }
+        });
+        break;
+      default:
+        throw new HttpError(`Unknown "content" item type: "${item.type}"`, 400);
+    }
+  }
+  if (content.every(item => item.type === "image_url")) {
+    parts.push({ text: "" }); // to avoid "Unable to submit request because it must have a text parameter"
+  }
   return parts;
 };
 
-
 const transformMessages = async (messages) => {
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      throw new HttpError("Input 'messages' must be a non-empty array.", 400);
-  }
-
+  if (!messages) { return; }
   const contents = [];
   let system_instruction;
-  const fnames = {};
-
-  for (let i = 0; i < messages.length; i++) {
-    const item = messages[i];
-
-    if (!item || typeof item.role !== 'string') {
-        throw new HttpError(`Invalid message format at index ${i}: Missing or invalid role.`, 400);
-    }
-
+  const fnames = {}; // cache function names by tool_call_id between messages
+  for (const item of messages) {
     if (item.role === "system") {
-        if (!system_instruction && typeof item.content === 'string') {
-           system_instruction = { parts: [{ text: item.content }] };
-        } else if (system_instruction) {
-             console.warn("Multiple system messages found. Only the first one is used.");
-        } else {
-             console.warn("System message content is not a string. Ignoring.");
-        }
+      system_instruction = { parts: await transformMsg(item) };
     } else {
-      let role;
-      switch (item.role) {
-          case "user": role = "user"; break;
-          case "assistant": role = "model"; break;
-          case "tool": role = "function"; break;
-          default:
-              console.warn(`Unknown message role: "${item.role}". Skipping message at index ${i}.`);
-              continue;
+      if (item.role === "assistant") {
+        item.role = "model";
+      } else if (item.role === "tool") {
+        const prev = contents[contents.length - 1];
+        if (prev?.role === "function") {
+          prev.parts.push(...await transformMsg(item, fnames));
+          continue;
+        }
+        item.role = "function"; // ignored
+      } else if (item.role !== "user") {
+        throw HttpError(`Unknown message role: "${item.role}"`, 400);
       }
-
-      try {
-          const parts = await transformMsg(item, fnames);
-          if ((role === 'user' || role === 'model') && parts.length === 0 && !(role === 'model' && item.tool_calls && !item.content)) {
-             console.warn(`Message at index ${i} resulted in empty parts for role '${role}'. Skipping.`);
-             continue;
-          }
-
-          const prevContent = contents[contents.length - 1];
-          if (prevContent && prevContent.role === role && role !== 'function') {
-              prevContent.parts.push(...parts);
-          } else {
-              contents.push({ role, parts });
-          }
-      } catch (e) {
-          console.error(`Error transforming message at index ${i}:`, e);
-          if (e instanceof HttpError) throw e;
-          throw new HttpError(`Failed to transform message at index ${i}: ${e.message}`, 400);
-      }
+      contents.push({
+        role: item.role,
+        parts: await transformMsg(item, fnames)
+      });
     }
   }
-
-   if (contents.length === 0) {
-       if (system_instruction) {
-           contents.push({ role: "user", parts: [{ text: "" }] });
-       } else {
-          throw new HttpError("No valid user or assistant messages found.", 400);
-       }
-   } else if (contents[0].role === "model") {
-       contents.unshift({ role: "user", parts: [{ text: "" }] });
-   }
-
+  if (system_instruction && contents.length === 0) {
+    contents.push({ role: "model", parts: { text: " " } });
+  }
+  //console.info(JSON.stringify(contents, 2));
   return { system_instruction, contents };
 };
 
-
 const transformTools = (req) => {
   let tools, tool_config;
-
-  if (req.tools && Array.isArray(req.tools)) {
-    const funcs = req.tools.filter(tool => tool.type === "function" && tool.function);
-    if (funcs.length > 0) {
-        // adjustSchema might be needed depending on Gemini's strictness
-        // funcs.forEach(adjustSchema);
-        tools = [{ functionDeclarations: funcs.map(schema => schema.function) }];
-    }
+  if (req.tools) {
+    const funcs = req.tools.filter(tool => tool.type === "function");
+    funcs.forEach(adjustSchema);
+    tools = [{ function_declarations: funcs.map(schema => schema.function) }];
   }
-
   if (req.tool_choice) {
-    let mode = "AUTO";
-    let allowedFunctionNames;
-
-    if (typeof req.tool_choice === "string") {
-        const choice = req.tool_choice.toUpperCase();
-        if (["NONE", "AUTO", "ANY"].includes(choice)) {
-            mode = choice;
-        } else if (choice === "REQUIRED") {
-             mode = "ANY"; // Map REQUIRED to ANY
-             console.warn("tool_choice 'required' mapped to 'ANY' for Gemini.");
-        } else {
-            console.warn(`Invalid string tool_choice value: "${req.tool_choice}". Using AUTO.`);
+    const allowed_function_names = req.tool_choice?.type === "function" ? [ req.tool_choice?.function?.name ] : undefined;
+    if (allowed_function_names || typeof req.tool_choice === "string") {
+      tool_config = {
+        function_calling_config: {
+          mode: allowed_function_names ? "ANY" : req.tool_choice.toUpperCase(),
+          allowed_function_names
         }
-    } else if (typeof req.tool_choice === 'object' && req.tool_choice.type === "function" && req.tool_choice.function?.name) {
-        mode = "ANY";
-        allowedFunctionNames = [req.tool_choice.function.name];
-    } else {
-         console.warn("Invalid tool_choice object format. Using AUTO.");
+      };
     }
-
-    tool_config = {
-      functionCallingConfig: {
-        mode: mode,
-        ...(allowedFunctionNames && { allowedFunctionNames })
-      }
-    };
   }
-
   return { tools, tool_config };
 };
 
-
-const transformRequest = async (req) => {
-    const { system_instruction, contents } = await transformMessages(req.messages);
-    const { tools, tool_config } = transformTools(req);
-    const generationConfig = transformConfig(req);
-
-    const payload = {
-        ...(system_instruction && { systemInstruction: system_instruction }),
-        contents,
-        ...(tools && { tools }),
-        ...(tool_config && { toolConfig: tool_config }),
-        safetySettings,
-        ...(Object.keys(generationConfig).length > 0 && { generationConfig }),
-    };
-    return payload;
-};
-
+const transformRequest = async (req) => ({
+  ...await transformMessages(req.messages),
+  safetySettings,
+  generationConfig: transformConfig(req),
+  ...transformTools(req),
+});
 
 const generateChatcmplId = () => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -1055,102 +641,144 @@ const generateChatcmplId = () => {
   return "chatcmpl-" + Array.from({ length: 29 }, randomChar).join("");
 };
 
-const reasonsMap = {
-  "FINISH_REASON_UNSPECIFIED": null,
+const reasonsMap = { //https://ai.google.dev/api/rest/v1/GenerateContentResponse#finishreason
+  //"FINISH_REASON_UNSPECIFIED": // Default value. This value is unused.
   "STOP": "stop",
   "MAX_TOKENS": "length",
   "SAFETY": "content_filter",
   "RECITATION": "content_filter",
-  "OTHER": null,
-  "FUNCTION_CALL": "tool_calls",
+  //"OTHER": "OTHER",
 };
-
-const SEP = ""; // Usually empty for OpenAI
-
+const SEP = "\n\n|>";
 const transformCandidates = (key, cand) => {
-  const message = { role: "assistant", content: null };
-  const textParts = [];
-  const toolCalls = [];
-
-  if (cand.content?.parts && Array.isArray(cand.content.parts)) {
-      for (const part of cand.content.parts) {
-        if (part.text !== undefined && part.text !== null) {
-          textParts.push(part.text);
-        } else if (part.functionCall) {
-          const fc = part.functionCall;
-          const callId = `call_${generateChatcmplId().substring(9)}`;
-          toolCalls.push({
-            id: callId,
-            type: "function",
-            function: {
-              name: fc.name,
-              arguments: JSON.stringify(fc.args || {}),
-            }
-          });
+  const message = { role: "assistant", content: [] };
+  for (const part of cand.content?.parts ?? []) {
+    if (part.functionCall) {
+      const fc = part.functionCall;
+      message.tool_calls = message.tool_calls ?? [];
+      message.tool_calls.push({
+        id: fc.id ?? `{${fc.name}}`,
+        type: "function",
+        function: {
+          name: fc.name,
+          arguments: JSON.stringify(fc.args),
         }
-      }
+      });
+    } else {
+      message.content.push(part.text);
+    }
   }
-
-  if (textParts.length > 0) {
-      message.content = textParts.join(SEP);
-  }
-
-  if (toolCalls.length > 0) {
-      message.tool_calls = toolCalls;
-  }
-
-   if (message.content === null && toolCalls.length === 0) {
-       message.content = "";
-   }
-
-  let finishReason = reasonsMap[cand.finishReason] !== undefined ? reasonsMap[cand.finishReason] : null;
-  if (cand.finishReason === "FUNCTION_CALL" && toolCalls.length > 0) {
-      finishReason = "tool_calls";
-  } else if (finishReason === "tool_calls" && toolCalls.length === 0) {
-      finishReason = "stop";
-  }
-
+  message.content = message.content.join(SEP) || null;
   return {
-    index: cand.index === undefined ? 0 : cand.index,
+    index: cand.index || 0, // 0-index is absent in new -002 models response
     [key]: message,
     logprobs: null,
-    finish_reason: finishReason,
+    finish_reason: reasonsMap[cand.finishReason] || cand.finishReason,
   };
 };
 const transformCandidatesMessage = transformCandidates.bind(null, "message");
 const transformCandidatesDelta = transformCandidates.bind(null, "delta");
 
-const transformUsage = (data) => {
-    if (!data) return { completion_tokens: 0, prompt_tokens: 0, total_tokens: 0 };
-    const completionTokens = data.candidatesTokenCount || data.completionTokens || 0;
-    const promptTokens = data.promptTokenCount || 0;
-    const totalTokens = data.totalTokenCount || (promptTokens + completionTokens);
-    return {
-        completion_tokens: completionTokens,
-        prompt_tokens: promptTokens,
-        total_tokens: totalTokens
-    };
-};
-
+const transformUsage = (data) => ({
+  completion_tokens: data.candidatesTokenCount,
+  prompt_tokens: data.promptTokenCount,
+  total_tokens: data.totalTokenCount
+});
 
 const processCompletionsResponse = (data, model, id) => {
-    if (!data || !Array.isArray(data.candidates)) {
-        console.error("Invalid non-stream response structure in processCompletionsResponse:", data);
-        // 不能在此处抛出错误，因为调用者期望字符串
-        // 返回一个表示错误的 JSON 字符串
-        return JSON.stringify({
-            id,
-            error: { message: "Invalid response structure from API.", type: "processing_error", code: 502 },
-            model,
-            object: "chat.completion",
-        });
-    }
   return JSON.stringify({
     id,
     choices: data.candidates.map(transformCandidatesMessage),
     created: Math.floor(Date.now()/1000),
     model,
+    //system_fingerprint: "fp_69829325d0",
     object: "chat.completion",
     usage: transformUsage(data.usageMetadata),
-  }, null, 2); // Add indentation for debugging
+  });
 };
+
+const responseLineRE = /^data: (.*)(?:\n\n|\r\r|\r\n\r\n)/;
+function parseStream (chunk, controller) {
+  this.buffer += chunk;
+  do {
+    const match = this.buffer.match(responseLineRE);
+    if (!match) { break; }
+    controller.enqueue(match[1]);
+    this.buffer = this.buffer.substring(match[0].length);
+  } while (true); // eslint-disable-line no-constant-condition
+}
+function parseStreamFlush (controller) {
+  if (this.buffer) {
+    console.error("Invalid data:", this.buffer);
+    controller.enqueue(this.buffer);
+  }
+}
+
+function transformResponseStream (data, special) {
+  const item = transformCandidatesDelta(data.candidates[0]);
+  switch (special) {
+    case "stop":
+      if (item.delta.tool_calls) {
+        item.finish_reason = "tool_calls";
+      }
+      item.delta = {};
+      break;
+    case "first":
+      item.finish_reason = null;
+      item.delta.content = "";
+      delete item.delta.tool_calls;
+      break;
+    default:
+      item.finish_reason = null;
+      delete item.delta.role;
+  }
+  const output = {
+    id: this.id,
+    choices: [item],
+    created: Math.floor(Date.now()/1000),
+    model: this.model,
+    //system_fingerprint: "fp_69829325d0",
+    object: "chat.completion.chunk",
+  };
+  if (data.usageMetadata && this.streamIncludeUsage) {
+    output.usage = stop ? transformUsage(data.usageMetadata) : null;
+  }
+  return "data: " + JSON.stringify(output) + delimiter;
+}
+const delimiter = "\n\n";
+function toOpenAiStream (line, controller) {
+  const transform = transformResponseStream.bind(this);
+  let data;
+  try {
+    data = JSON.parse(line);
+  } catch (err) {
+    console.error(line);
+    console.error(err);
+    const length = this.last.length || 1; // at least 1 error msg
+    const candidates = Array.from({ length }, (_, index) => ({
+      finishReason: "error",
+      content: { parts: [{ text: err }] },
+      index,
+    }));
+    data = { candidates };
+  }
+  const cand = data.candidates[0];
+  console.assert(data.candidates.length === 1, "Unexpected candidates count: %d", data.candidates.length);
+  cand.index = cand.index || 0; // absent in new -002 models response
+  if (!this.last[cand.index]) {
+    controller.enqueue(transform(data, "first"));
+  }
+  this.last[cand.index] = data;
+  if (cand.content) { // prevent empty data (e.g. when MAX_TOKENS)
+    controller.enqueue(transform(data));
+  }
+}
+function toOpenAiStreamFlush (controller) {
+  const transform = transformResponseStream.bind(this);
+  if (this.last.length > 0) {
+    for (const data of this.last) {
+      controller.enqueue(transform(data, "stop"));
+    }
+    controller.enqueue("data: [DONE]" + delimiter);
+  }
+}
