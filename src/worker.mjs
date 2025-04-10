@@ -1,225 +1,364 @@
 import { Buffer } from "node:buffer";
 
-// 密钥库
-const apiKeys = [
-  "AIzaSyAsCGQBOD8RfuwxebgwqPPyHtAdgx3aTMo",
-  "AIzaSyCMKZVt7hSY6lqhrOpbDzZM-0xKmt0ShX4",
-  "AIzaSyCgk-aTLlS3mwK9zhb9tceyvn3eNXaV9YQ",
-  "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
-  "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
-  "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
-  "AIzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
-  "AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
-  "AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
-  "AIzaSyB95dY2-qkDpy7PC5fe-jD1wNzF5vKXOGc",
-  "AIzaSyBSiRXbuYwRr2T9zqu4MghU4DEufbr_ZQY",
-  "AIzaSyCUDVUsHamubnX_mn2HM_ovWL-EXRWBfmc",
-  "AIzaSyDFfp9igiphlpqiNDDruGocouBd63B4plE",
-  "AIzaSyA3xz02P78Md_sp9P8hgUV6rnD8V5wHl_I",
-  "AIzaSyAtpQKfg2_GNITxejmMo82BxDL-0QReanY",
-  "AIzaSyAF3zEc8On49CzdL_Gz2pmasP2DuYAepcM",
-  "AIzaSyBSOecsMHZdSIM7aHY3XNAfspJ0zbSEDtk",
-  "AIzaSyDBDupYyFZHtt4Es2Pijk6q0tAnTWRjxOY",
-  "AIzaSyCL5KBat0QfW7jd1bltB3_NsNKfhLZJezQ",
-  "AIzaSyBcx4xPYAmmd-pBkiaUoILlO3Sheu9TFlY",
-  "AIzaSyDhg7avSE295pVl7UM7nAWUUqiAgwFrwFc",
-  "AIzaSyBTTjWPuQM13zCbMR10qO1SpRBjrZLcoMw",
-  "AIzaSyBj-B5C-SJtA3ykqAP_U9l5TAsD4WUuprY",
-  "AIzaSyAlVQtRKyZwCXeCfjwLXvYkiWo3Ly_pXuM",
-  "AIzaSyB6wfHWsPrJbtP9-UkU0DDC2K2nxkTojlk",
-  "AIzaSyDLje4YehvPkncvBDLmcICnYIuIbQD16fA",
-  "AIzaSyByglEVo4_mzmUZAG0HZZYAa3tlxv5L6pU",
-  "AIzaSyArueFajIY63zciUnkioJbd8zcxkSUeZbU",
-  "AIzaSyCu4W4T_R-7n7tN8jfMoHRJWrrwk6bVn9w",
-  "AIzaSyCfNKkuIBoVkl6mf0IOzyRaSi09sDxrdSk",
-  "AIzaSyCnTdvWTrNk7n28Q-LwZmBZBgHCpDhJ58o",
-  "AIzaSyDpxsQvpqN5s9HQpL6zNTMygBW_4tP5DsY",
-  "AIzaSyDZvYljhrBE-fN7ceWaFqErAXzfyjqOIeU",
-  "AIzaSyAkYvj4ukmvzo9ukqeHAybbozRUZuIaJjc",
-  "AIzaSyDWtSq8If5UIEC7D2uA7sCkZhFchZ-hfjo",
-  "AIzaSyDubRMgg3eUK_XRzQVTp8k_UUZSKJimS9s",
-  "AIzaSyArxFRnyD9cV-qkXSDk7Buh5fkhgMCKIXE",
-  "AIzaSyALaly28nOiUEXEd0H7Vs2m26dnzCvl6zU",
-  "AIzaSyASlN_5kJvNXYto5BXTDvJRRvWpt_dhBW0",
-  "AIzaSyDW1SVoXipuP7_szC2phk5LGThplNNHss8",
-  "AIzaSyCqL5PUZFa7krmdkEfWbC7a9_EB3oIq6kg",
-  "AIzaSyBK-kNydXldsryLlRwKHUYlKAbMElAt64Y",
-  "AIzaSyBwycmu4Jzlqjww2gmb3VkinPX3yq3KkSA",
-  "AIzaSyALhA40vulZZFYxmLMDH3lpVwRs3OhcVJc",
-  "AIzaSyB6EKR-3HRDP1CYbolE65bYLBmDnhSvCJ8",
-  "AIzaSyAGYwccjYZviC2yP3KlTI6C-mQDE4jWr9o",
-  "AIzaSyBk0gBdR12O_7nrZnSUfEKdq-X0_ZrM8lA",
-  "AIzaSyCLZ4xiFZtaNB8O2yiz-1nc3YiIC6Jr_V0",
-  "AIzaSyDa1a2hAfvYQzvqGCH6Nk8qTMCk3O2aCls",
-  "AIzaSyA6eiiLjxXKuH3S750cmV5Gt5GcEkLmbQ8",
-  "AIzaSyCafCTw_Ja7d_ovpI57MxjmyDtTVlgintQ",
-  "AIzaSyDB5lc55kkDEh7nhGRFnHy-xPeffiENFd0",
-  "AIzaSyDeEXtAG4qOV9z20GgDnYRREWPnAMtjlW8",
-  "AIzaSyBpTgfUuODNgYKVbgtGxqCiAjd8lTtnsgI",
-  "AIzaSyB8akwchatPzc8OG6JBd7kh-5MF798Maj4",
-  "AIzaSyDrEkwdLhI0MRPN6dsjF4mJrhBReU32k8A",
-  "AIzaSyDRVJGGv6hpYEItzTpiUW31ym7xM4Nj9qE",
-  "AIzaSyAjmCaL-HItCJYRQi7KdzzbU4wHt0UgHHI",
-  "AIzaSyCE1-Ut41Wmgip49sy4opm4s6HunbOXVzk",
-  "AIzaSyCYlmI4u6zb02g2JOMgSIKHZZMU2jOrV8c",
-  "AIzaSyAS_gpGU0InGtwswGtcMnydHORG43cgl5Q",
-  "AIzaSyB2zdEIwMUI7c7LQYrQYD-rKxXzgi7u_-I",
-  "AIzaSyBvAU1Xy6-PkxzgfIHhxhGH9v3orzxa6PU",
-  "AIzaSyBhalgCaFwcubvI-B-YvIugpUgmddjpbYQ",
-  "AIzaSyCTy_AjF1i3oOe3OsQyifw-M-dbMJF4XtQ",
-  "AIzaSyCnVG19hbVR9CJuBV0Y3_a2cLo6oxw9oTM",
-  "AIzaSyD6hgtpZrICZOFzWZwaDCyXXy_yAg3095c",
-  "AIzaSyBLPrJwYPztz4NltzrOZMIXJ9kvBOXtNMg",
-  "AIzaSyCGulL1HhP-jFcvJ4TAliD-hQBvxC_ijME",
-  "AIzaSyBaQ_jE79BfYxip5Vmrtu-1vxpWOBcnnSA",
-  "AIzaSyDNIzxAd2LD1a8DBC2PqgiLoLPC_nf11Vw",
-  "AIzaSyBVEQnvx3-uwVTN1-HCgCpgp2hXyKf4eLg",
-  "AIzaSyCvnLhM4XWf70enFVo9eeV8YS_crvdd18Y",
-  "AIzaSyBIZfeSx6XmheGBDdc0zN3o1WwoKWDtL_k",
-];
-const MAX_RETRIES_PER_KEY = 1; // 每个密钥在单轮内重试次数（这里设为1，即遇到错误就切换）
-const MAX_ROTATION_ROUNDS = 3; // 最大轮询轮数
+// 添加API密钥库配置
+// 从环境变量读取API密钥，格式为逗号分隔的密钥列表
+// 例如: GEMINI_API_KEYS=key1,key2,key3
+const API_KEYS = (function() {
+  // 预设的密钥列表
+  const predefinedKeys = [
+    "AIzaSyCa5yUPn2Miz4ehq3Ak7USy7pR7INbd1D4",
+    "AIzaSyBFBF6tCLj1ylVUNe05DU2ZB010z15J5rs",
+    "AIzaSyCgk-aTLlS3mwK9zhb9tceyvn3eNXaV9YQ",
+    "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
+    "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
+    "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
+    "AIzzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
+    "AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
+    "AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
+    "AIzaSyB95dY2-qkDpy7PC5fe-jD1wNzF5vKXOGc",
+    "AIzaSyBSiRXbuYwRr2T9zqu4MghU4DEufbr_ZQY",
+    "AIzaSyCUDVUsHamubnX_mn2HM_ovWL-EXRWBfmc",
+    "AIzaSyDFfp9igiphlpqiNDDruGocouBd63B4plE",
+    "AIzaSyA3xz02P78Md_sp9P8hgUV6rnD8V5wHl_I",
+    "AIzaSyAtpQKfg2_GNITxejmMo82BxDL-0QReanY",
+    "AIzaSyAF3zEc8On49CzdL_Gz2pmasP2DuYAepcM",
+    "AIzaSyBSOecsMHZdSIM7aHY3XNAfspJ0zbSEDtk",
+    "AIzaSyDBDupYyFZHtt4Es2Pijk6q0tAnTWRjxOY",
+    "AIzaSyCL5KBat0QfW7jd1bltB3_NsNKfhLZJezQ",
+    "AIzaSyBcx4xPYAmmd-pBkiaUoILlO3Sheu9TFlY",
+    "AIzaSyDhg7avSE295pVl7UM7nAWUUqiAgwFrwFc",
+    "AIzaSyBTTjWPuQM13zCbMR10qO1SpRBjrZLcoMw",
+    "AIzaSyBj-B5C-SJtA3ykqAP_U9l5TAsD4WUuprY",
+    "AIzaSyAlVQtRKyZwCXeCfjwLXvYkiWo3Ly_pXuM",
+    "AIzaSyB6wfHWsPrJbtP9-UkU0DDC2K2nxkTojlk",
+    "AIzaSyDLje4YehvPkncvBDLmcICnYIuIbQD16fA",
+    "AIzaSyByglEVo4_mzmUZAG0HZZYAa3tlxv5L6pU",
+    "AIzaSyArueFajIY63zciUnkioJbd8zcxkSUeZbU",
+    "AIzaSyCu4W4T_R-7n7tN8jfMoHRJWrrwk6bVn9w",
+    "AIzaSyCfNKkuIBoVkl6mf0IOzyRaSi09sDxrdSk",
+    "AIzaSyCnTdvWTrNk7n28Q-LwZmBZBgHCpDhJ58o",
+    "AIzaSyDpxsQvpqN5s9HQpL6zNTMygBW_4tP5DsY",
+    "AIzaSyDZvYljhrBE-fN7ceWaFqErAXzfyjqOIeU",
+    "AIzaSyAkYvj4ukmvzo9ukqeHAybbozRUZuIaJjc",
+    "AIzaSyDWtSq8If5UIEC7D2uA7sCkZhFchZ-hfjo",
+    "AIzaSyDubRMgg3eUK_XRzQVTp8k_UUZSKJimS9s",
+    "AIzaSyArxFRnyD9cV-qkXSDk7Buh5fkhgMCKIXE",
+    "AIzaSyALaly28nOiUEXEd0H7Vs2m26dnzCvl6zU",
+    "AIzaSyASlN_5kJvNXYto5BXTDvJRRvWpt_dhBW0",
+    "AIzaSyDW1SVoXipuP7_szC2phk5LGThplNNHss8",
+    "AIzaSyCqL5PUZFa7krmdkEfWbC7a9_EB3oIq6kg",
+    "AIzaSyBK-kNydXldsryLlRwKHUYlKAbMElAt64Y",
+    "AIzaSyBwycmu4Jzlqjww2gmb3VkinPX3yq3KkSA",
+    "AIzaSyALhA40vulZZFYxmLMDH3lpVwRs3OhcVJc",
+    "AIzaSyB6EKR-3HRDP1CYbolE65bYLBmDnhSvCJ8",
+    "AIzaSyAGYwccjYZviC2yP3KlTI6C-mQDE4jWr9o",
+    "AIzaSyBk0gBdR12O_7nrZnSUfEKdq-X0_ZrM8lA",
+    "AIzaSyCLZ4xiFZtaNB8O2yiz-1nc3YiIC6Jr_V0",
+    "AIzaSyDa1a2hAfvYQzvqGCH6Nk8qTMCk3O2aCls",
+    "AIzaSyA6eiiLjxXKuH3S750cmV5Gt5GcEkLmbQ8",
+    "AIzaSyDB5lc55kkDEh7nhGRFnHy-xPeffiENFd0",
+    "AIzaSyDeEXtAG4qOV9z20GgDnYRREWPnAMtjlW8",
+    "AIzaSyBpTgfUuODNgYKVbgtGxqCiAjd8lTtnsgI",
+    "AIzaSyB8akwchatPzc8OG6JBd7kh-5MF798Maj4",
+    "AIzaSyBLkqtK3JWIpBtDhztylwgquRFkXABRpnE",
+    "AIzaSyDrEkwdLhI0MRPN6dsjF4mJrhBReU32k8A",
+    "AIzaSyDRVJGGv6hpYEItzTpiUW31ym7xM4Nj9qE",
+    "AIzaSyAjmCaL-HItCJYRQi7KdzzbU4wHt0UgHHI",
+    "AIzaSyCE1-Ut41Wmgip49sy4opm4s6HunbOXVzk",
+    "AIzaSyCYlmI4u6zb02g2JOMgSIKHZZMU2jOrV8c",
+    "AIzaSyAS_gpGU0InGtwswGtcMnydHORG43cgl5Q",
+    "AIzaSyB2zdEIwMUI7c7LQYrQYD-rKxXzgi7u_-I",
+    "AIzaSyBvAU1Xy6-PkxzgfIHhxhGH9v3orzxa6PU",
+    "AIzaSyBhalgCaFwcubvI-B-YvIugpUgmddjpbYQ",
+    "AIzaSyCTy_AjF1i3oOe3OsQyifw-M-dbMJF4XtQ",
+    "AIzaSyCnVG19hbVR9CJuBV0Y3_a2cLo6oxw9oTM",
+    "AIzaSyD6hgtpZrICZOFzWZwaDCyXXy_yAg3095c",
+    "AIzaSyBLPrJwYPztz4NltzrOZMIXJ9kvBOXtNMg",
+    "AIzaSyCGulL1HhP-jFcvJ4TAliD-hQBvxC_ijME",
+    "AIzaSyBaQ_jE79BfYxip5Vmrtu-1vxpWOBcnnSA",
+    "AIzaSyDNIzxAd2LD1a8DBC2PqgiLoLPC_nf11Vw",
+    "AIzaSyBVEQnvx3-uwVTN1-HCgCpgp2hXyKf4eLg",
+    "AIzaSyBIZfeSx6XmheGBDdc0zN3o1WwoKWDtL_k",
+    "AIzaSyCvnLhM4XWf70enFVo9eeV8YS_crvdd18Y"
+
+  ];
+
+  // 尝试获取环境变量
+  const envKeys = typeof process !== 'undefined' && process.env ?
+                  process.env.GEMINI_API_KEYS :
+                  (typeof Deno !== 'undefined' ? Deno.env.get('GEMINI_API_KEYS') : null);
+
+  // 合并预设密钥和环境变量中的密钥
+  const envKeyArray = envKeys ?
+    envKeys.split(',').map(k => k.trim()).filter(k => k) :
+    [];
+
+  // 返回所有密钥的去重数组
+  return [...new Set([...predefinedKeys, ...envKeyArray])];
+})();
+
+console.log(`Loaded ${API_KEYS.length} API keys from predefined keys and environment`);
+
+// 密钥轮询计数器
+let keyIndex = 0;
+
+// 内存中的运行时密钥集合，用于动态添加的密钥
+const RUNTIME_KEYS = new Set(API_KEYS);
+
+// 获取当前轮换索引对应的密钥 (辅助函数)
+function getApiKeyForRotation(index) {
+    const keyArray = Array.from(RUNTIME_KEYS);
+    if (keyArray.length === 0) {
+        console.error("错误：密钥库中没有可用的 API 密钥。");
+        return null;
+    }
+    // 确保索引有效
+    const validIndex = index % keyArray.length;
+    const key = keyArray[validIndex];
+    // console.log(`为轮换提供索引 ${validIndex} 的密钥: ${key.substring(0, 5)}...`);
+    return key;
+}
+
+// 获取要使用的 API 密钥 (惰性轮换逻辑)
+// 此函数不改变全局 keyIndex
+function getApiKey(providedKey) {
+  // 1. 如果提供了具体密钥，直接使用
+  if (providedKey && providedKey !== "rotate") {
+    // console.log(`使用提供的特定密钥: ${providedKey.substring(0, 5)}...`);
+    return providedKey;
+  }
+  // 2. 否则（请求轮换 "rotate" 或无密钥），返回当前 keyIndex 指向的密钥
+  return getApiKeyForRotation(keyIndex);
+}
+
+// 管理密钥的函数
+async function handleKeyManagement(request, adminKey) {
+  // 检查管理密钥
+  const auth = request.headers.get("X-Admin-Key");
+  if (!auth || auth !== adminKey) {
+    throw new HttpError("Unauthorized. Admin key required.", 401);
+  }
+
+  // 根据请求方法执行不同操作
+  switch (request.method) {
+    case "GET":
+      // 返回所有密钥（注意：实际生产环境中应该隐藏完整密钥）
+      return new Response(JSON.stringify({
+        count: RUNTIME_KEYS.size,
+        keys: Array.from(RUNTIME_KEYS).map(k => k.substring(0, 5) + "..." + k.substring(k.length - 4))
+      }, null, 2), fixCors({ status: 200, headers: { "Content-Type": "application/json" } }));
+
+    case "POST":
+      // 添加新密钥
+      const { key } = await request.json();
+      if (!key) {
+        throw new HttpError("Missing key in request body", 400);
+      }
+      RUNTIME_KEYS.add(key);
+      return new Response(JSON.stringify({ message: "Key added", count: RUNTIME_KEYS.size }),
+        fixCors({ status: 200, headers: { "Content-Type": "application/json" } }));
+
+    case "DELETE":
+      // 删除密钥
+      const { key: keyToDelete } = await request.json();
+      if (!keyToDelete) {
+        throw new HttpError("Missing key in request body", 400);
+      }
+      const deleted = RUNTIME_KEYS.delete(keyToDelete);
+      return new Response(JSON.stringify({
+        message: deleted ? "Key deleted" : "Key not found",
+        count: RUNTIME_KEYS.size
+      }), fixCors({ status: deleted ? 200 : 404, headers: { "Content-Type": "application/json" } }));
+
+    default:
+      throw new HttpError("Method not allowed", 405);
+  }
+}
 
 export default {
   async fetch (request) {
+    // --- 更靠前、更明确的日志记录 ---
+    // console.log(">>> [Worker Log] fetch handler started <<<"); // Removed for brevity
+
+    let pathname = "[URL 解析错误]";
+    try {
+        pathname = new URL(request.url).pathname;
+    } catch (urlError) {
+        console.error(">>> [Worker Log] Error parsing request URL:", urlError);
+    }
+    // console.log(`>>> [Worker Log] Method: ${request.method}, Path: ${pathname}`); // Removed for brevity
+
+    // 记录部分关键请求头
+    const headersToLog = ['Authorization', 'Content-Type', 'User-Agent', 'Accept'];
+    const loggedHeaders = {};
+    for (const headerName of headersToLog) {
+        if (request.headers.has(headerName)) {
+            // 对 Authorization 头进行部分隐藏
+            if (headerName === 'Authorization' && request.headers.get(headerName).includes('Bearer ')) {
+                 const token = request.headers.get(headerName).split(' ')[1];
+                 loggedHeaders[headerName] = `Bearer ${token.substring(0, 5)}...${token.substring(token.length - 4)}`;
+            } else {
+                 loggedHeaders[headerName] = request.headers.get(headerName);
+            }
+        }
+    }
+    // console.log(`>>> [Worker Log] Headers (partial): ${JSON.stringify(loggedHeaders)}`); // Removed for brevity
+
+    // --- Request Body Logging Removed for performance ---
+
     if (request.method === "OPTIONS") {
       return handleOPTIONS();
     }
-
-    const errHandler = (err, status = 500) => {
-      console.error(err);
+    const errHandler = (err) => {
+      console.error("错误处理程序捕获:", err);
+      // 确保即使在错误情况下也返回 CORS 头部
+      const status = err instanceof HttpError ? err.status : 500;
       const message = err instanceof Error ? err.message : String(err);
-      const errorStatus = err instanceof HttpError ? err.status : status;
-      return new Response(message, fixCors({ status: errorStatus }));
+      return new Response(JSON.stringify({ error: { message, type: err.name, code: status } }), fixCors({ status }));
     };
 
     try {
-      const auth = request.headers.get("Authorization");
-      const providedApiKey = auth?.split(" ")[1];
-
-      if (!providedApiKey && apiKeys.length === 0) {
-          throw new HttpError("Authorization header is missing or empty, and no fallback keys are available.", 401);
-      }
-
-      const isRotateMode = providedApiKey === "rotate";
-      let currentApiKey = providedApiKey; // 初始密钥或 "rotate"
-      let apiKeyIndex = 0; // 轮询模式下的初始索引
-      let rotationRound = 0; // 轮询轮数
-
-      // 如果是 rotate 模式且密钥库不为空，设置初始索引
-      if (isRotateMode && apiKeys.length > 0) {
-          apiKeyIndex = Math.floor(Math.random() * apiKeys.length); // 随机开始
-          currentApiKey = apiKeys[apiKeyIndex];
-          console.log(`Rotate mode enabled. Starting with key index: ${apiKeyIndex}`);
-      } else if (!isRotateMode && !providedApiKey && apiKeys.length > 0) {
-          // 如果没有提供密钥，但有密钥库，则默认使用第一个
-          currentApiKey = apiKeys[0];
-          console.log("No API key provided. Using the first key from the key store.");
-      } else if (!isRotateMode && !providedApiKey && apiKeys.length === 0) {
-          throw new HttpError("Authorization header is missing and no keys available in store.", 401);
-      } else if (!isRotateMode && providedApiKey) {
-          console.log("Using provided API key.");
-      } else if (isRotateMode && apiKeys.length === 0) {
-          throw new HttpError("Rotate mode requested, but the API key store is empty.", 500);
-      }
-
-
-      const makeApiRequestWithRetry = async (url, options) => {
-        let attempts = 0;
-        const maxTotalAttempts = isRotateMode ? apiKeys.length * MAX_ROTATION_ROUNDS : MAX_RETRIES_PER_KEY;
-        let lastError = null;
-
-        while (attempts < maxTotalAttempts) {
-          attempts++;
-          let keyToUse;
-
-          if (isRotateMode) {
-            keyToUse = apiKeys[apiKeyIndex];
-            console.log(`Attempt ${attempts}/${maxTotalAttempts} (Round ${rotationRound + 1}), Using key index: ${apiKeyIndex}`);
-          } else {
-            keyToUse = currentApiKey; // 使用固定的密钥
-             console.log(`Attempt ${attempts}/${maxTotalAttempts} using provided/default key.`);
-          }
-
-          // 更新请求头中的 API Key
-          const currentHeaders = makeHeaders(keyToUse, options.headers);
-          const currentOptions = { ...options, headers: currentHeaders };
-
-          try {
-            const response = await fetch(url, currentOptions);
-
-            // 检查是否需要重试的错误
-            if (!response.ok && [400, 429, 500].includes(response.status)) {
-              lastError = new HttpError(`API request failed with status ${response.status} using key index ${apiKeyIndex}`, response.status);
-              console.warn(`Attempt ${attempts} failed: ${lastError.message}`);
-
-              if (isRotateMode) {
-                // 切换到下一个密钥
-                apiKeyIndex = (apiKeyIndex + 1) % apiKeys.length;
-                if (apiKeyIndex === 0) { // 完成一轮
-                  rotationRound++;
-                  console.log(`Completed rotation round ${rotationRound}.`);
-                  if (rotationRound >= MAX_ROTATION_ROUNDS) {
-                    console.error(`Max rotation rounds (${MAX_ROTATION_ROUNDS}) reached.`);
-                    break; // 跳出循环
-                  }
-                }
-                continue; // 继续下一次尝试
-              } else {
-                 // 非轮询模式下，如果配置了重试次数大于1，可以在这里添加重试逻辑
-                 // 但当前 MAX_RETRIES_PER_KEY = 1，所以直接跳出
-                 break;
-              }
-            }
-            // 如果请求成功或遇到非重试错误，则返回响应
-            return response;
-          } catch (error) {
-             // 网络错误等 fetch 本身的异常
-            lastError = error;
-            console.error(`Attempt ${attempts} failed with fetch error:`, error);
-             // 网络错误通常不建议立即重试或切换key，可能需要更复杂的策略
-             // 这里简单地中断重试
-            break;
-          }
-        }
-
-        // 如果所有尝试都失败了
-        console.error(`All ${attempts-1} attempts failed.`);
-        if (lastError instanceof Response) {
-            return lastError; // 返回最后一个错误响应
-        } else if (lastError instanceof Error) {
-            throw lastError; // 抛出最后一个捕获的错误
-        } else {
-            throw new HttpError("API request failed after multiple retries.", 500);
-        }
-      };
-
-
-      const assert = (success, message = "The specified HTTP method is not allowed for the requested resource", status = 400) => {
-        if (!success) {
-          throw new HttpError(message, status);
-        }
-      };
-
       const { pathname } = new URL(request.url);
-      switch (true) {
-        case pathname.endsWith("/chat/completions"):
-          assert(request.method === "POST");
-          return handleCompletions(await request.json(), makeApiRequestWithRetry)
-            .catch(err => errHandler(err, err.status));
-        case pathname.endsWith("/embeddings"):
-          assert(request.method === "POST");
-          return handleEmbeddings(await request.json(), makeApiRequestWithRetry)
-            .catch(err => errHandler(err, err.status));
-        case pathname.endsWith("/models"):
-          assert(request.method === "GET");
-          return handleModels(makeApiRequestWithRetry)
-            .catch(err => errHandler(err, err.status));
-        default:
-          throw new HttpError("404 Not Found", 404);
+
+      // --- 密钥管理端点处理 ---
+      if (pathname.endsWith("/admin/keys")) {
+        const adminKey = typeof process !== 'undefined' && process.env ?
+                  process.env.ADMIN_KEY :
+                  (typeof Deno !== 'undefined' ? Deno.env.get('ADMIN_KEY') : null);
+
+        if (!adminKey) {
+          throw new HttpError("Admin key not configured on server", 500);
+        }
+        // 管理端点不参与重试逻辑
+        return await handleKeyManagement(request, adminKey).catch(errHandler);
       }
+
+      // --- API 请求处理与重试逻辑 ---
+      const auth = request.headers.get("Authorization");
+      const providedKey = auth?.split(" ")[1];
+      const isRotating = !providedKey || providedKey === "rotate"; // 判断是否启用轮换/重试模式
+
+      const keyArrayForMaxAttempts = Array.from(RUNTIME_KEYS); // 用于确定最大尝试次数
+      const maxAttempts = isRotating ? keyArrayForMaxAttempts.length * 3 : 1; // 最多轮询 3 轮
+      let lastErrorResponse = null;
+      let attempts = 0;
+      let currentKeyIndex = keyIndex; // 本次请求开始时的索引，仅在轮换失败时递增
+
+      // console.log(`开始处理请求 ${pathname}. 轮换模式: ${isRotating}, 最大尝试次数: ${maxAttempts} (最多3轮), 初始索引: ${currentKeyIndex}`); // Removed for brevity
+
+      while (attempts < maxAttempts) {
+        attempts++;
+        // 获取当前尝试使用的密钥
+        const apiKey = getApiKey(providedKey === "rotate" ? getApiKeyForRotation(currentKeyIndex) : providedKey);
+
+        if (!apiKey) {
+          console.error(`尝试 ${attempts}: 未能获取到 API 密钥 (索引 ${currentKeyIndex})。`);
+          if (!lastErrorResponse) { // 如果是第一次尝试就没key
+             throw new HttpError("No API key available.", 500);
+          } else { // 如果是重试中发现没key了（例如被动态删除了）
+             break; // 结束重试，返回上一个错误
+          }
+        }
+        const currentRound = keyArrayForMaxAttempts.length > 0 ? Math.floor((attempts - 1) / keyArrayForMaxAttempts.length) + 1 : 1;
+        // 保留此日志以显示正在尝试哪个密钥
+        console.log(`轮次 ${currentRound}/3 | 尝试 ${attempts}/${maxAttempts} | 密钥 ...${apiKey.slice(-6)}`); // 显示密钥后6位
+
+        // 克隆请求对象，因为 body 只能读取一次
+        const clonedRequest = request.clone();
+        let response;
+
+        try {
+          // --- 根据路径调用相应的处理函数 ---
+          const assert = (success) => {
+            if (!success) {
+              throw new HttpError("The specified HTTP method is not allowed for the requested resource", 405); // 405 Method Not Allowed 更合适
+            }
+          };
+
+          switch (true) {
+            case pathname.endsWith("/chat/completions"):
+              assert(clonedRequest.method === "POST");
+              response = await handleCompletions(await clonedRequest.json(), apiKey);
+              break;
+            case pathname.endsWith("/embeddings"):
+              assert(clonedRequest.method === "POST");
+              response = await handleEmbeddings(await clonedRequest.json(), apiKey);
+              break;
+            case pathname.endsWith("/models"):
+              assert(clonedRequest.method === "GET");
+              response = await handleModels(apiKey); // GET 请求不需要读取 body，无需克隆的 json()
+              break;
+            default:
+              // 如果之前的尝试有错误，返回那个错误，否则返回 404
+              if (lastErrorResponse) {
+                 response = lastErrorResponse;
+                 break; // 跳出 switch
+              }
+              throw new HttpError("404 Not Found", 404);
+          }
+
+          // --- 检查响应 ---
+          if (response.ok) {
+            // console.log(`尝试 ${attempts} 成功，状态码: ${response.status}`); // Removed for brevity, only log errors
+            // 成功时，更新全局 keyIndex 指向这个成功的密钥索引
+            // 这样下次 rotate 请求会优先使用这个成功的密钥
+            if (isRotating) {
+                keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 更新全局索引
+                console.log(`请求成功，全局 keyIndex 更新为 ${keyIndex}`);
+            }
+            return response; // 成功，直接返回
+          }
+
+          // --- 处理失败响应 ---
+          console.warn(`尝试 ${attempts} 失败，状态码: ${response.status}`);
+          lastErrorResponse = response.clone(); // 保存错误响应副本以备后用
+
+          // 检查是否是可重试的错误且处于轮换模式
+          // 新增 404 和 500 作为可重试错误
+          const shouldRetry = isRotating && [400, 429, 404, 500].includes(response.status);
+
+          if (shouldRetry) {
+            // console.log(`遇到可重试错误 (状态码 ${response.status}) 且处于轮换模式，递增密钥索引并准备重试...`); // Removed for brevity, failure log is sufficient
+            // 只有在需要重试时才递增索引
+            currentKeyIndex++; // 下次循环将使用下一个索引的密钥 (取模运算会自动处理绕回)
+            // keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 可选：更新全局索引
+            // 保持注释，实现惰性轮换：下次新请求仍从上次成功或初始的 key 开始
+            // 继续下一次循环
+          } else {
+            // console.log(`遇到不可重试错误 (状态码 ${response.status})、非轮换模式或请求成功，将返回当前响应。`); // Removed for brevity
+            // 如果成功，keyIndex 保持不变。下次 rotate 请求将继续使用这个成功的 key。
+            return response; // 不可重试、非轮换模式或成功，直接返回当前响应
+          }
+
+        } catch (innerErr) {
+           // 捕获 handleCompletions/Embeddings/Models 内部可能抛出的错误
+           console.error(`尝试 ${attempts} 时内部处理函数出错:`, innerErr);
+           const status = innerErr instanceof HttpError ? innerErr.status : 500;
+           lastErrorResponse = new Response(JSON.stringify({ error: { message: innerErr.message, type: innerErr.name, code: status } }), fixCors({ status }));
+
+           // 检查是否是可重试的错误且处于轮换模式
+           // 新增 404 和 500 作为可重试错误
+           const shouldRetryFromInnerError = isRotating && [400, 429, 404, 500].includes(status);
+
+           if (shouldRetryFromInnerError) {
+               // console.log(`内部错误可重试 (状态码 ${status}) 且处于轮换模式，递增密钥索引并准备重试...`); // Removed for brevity
+               currentKeyIndex++; // 递增索引以尝试下一个密钥 (取模运算会自动处理绕回)
+               // keyIndex = currentKeyIndex % keyArrayForMaxAttempts.length; // 可选：更新全局索引
+           } else {
+               // console.log(`内部错误不可重试 (状态码 ${status}) 或非轮换模式，返回错误。`); // Removed for brevity
+               return lastErrorResponse; // 不可重试或非轮换模式，返回错误
+           }
+           // 继续循环
+        }
+      } // end while loop
+
+      // 如果循环结束仍未成功（尝试了所有密钥）
+      console.warn(`在 ${maxAttempts} 次尝试 (最多3轮轮询) 后均失败，返回最后记录的错误。`);
+      return lastErrorResponse ?? new Response(JSON.stringify({ error: { message: `All API key attempts failed after ${maxAttempts} tries (up to 3 rounds).`, type: "RetryError", code: 500 } }), fixCors({ status: 500 })); // 如果连 lastErrorResponse 都没有，返回通用错误
+
     } catch (err) {
-      return errHandler(err, err.status);
+      // 捕获 fetch 函数顶层的错误 (例如 URL 解析错误)
+      return errHandler(err);
     }
   }
 };
@@ -235,8 +374,8 @@ class HttpError extends Error {
 const fixCors = ({ headers, status, statusText }) => {
   headers = new Headers(headers);
   headers.set("Access-Control-Allow-Origin", "*");
-  headers.set("Access-Control-Allow-Methods", "*"); // 允许所有方法
-  headers.set("Access-Control-Allow-Headers", "*"); // 允许所有头部
+  headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS"); // 明确允许的方法
+  headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type, x-goog-api-client, X-Admin-Key"); // 添加 X-Admin-Key
   return { headers, status, statusText };
 };
 
@@ -245,8 +384,8 @@ const handleOPTIONS = async () => {
     status: 204, // No Content for preflight
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS", // 明确列出允许的方法
-      "Access-Control-Allow-Headers": "Authorization, Content-Type, x-goog-api-client", // 明确允许的头部
+      "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS", // 添加 DELETE
+      "Access-Control-Allow-Headers": "Authorization, Content-Type, x-goog-api-client, X-Admin-Key", // 添加 X-Admin-Key
       "Access-Control-Max-Age": "86400", // 缓存预检结果一天
     }
   });
@@ -259,18 +398,15 @@ const API_VERSION = "v1beta";
 const API_CLIENT = "genai-js/0.21.0"; // npm view @google/generative-ai version
 const makeHeaders = (apiKey, more = {}) => ({
   "x-goog-api-client": API_CLIENT,
-  ...(apiKey && { "x-goog-api-key": apiKey }), // 只在 apiKey 有效时添加
-  ...more // 合并额外的 headers
+  ...(apiKey && { "x-goog-api-key": apiKey }),
+  ...more
 });
 
-
-async function handleModels (makeApiRequest) {
-  const response = await makeApiRequest(`${BASE_URL}/${API_VERSION}/models`, {
-      method: "GET",
-      headers: {} // API Key 会在 makeApiRequestWithRetry 中添加
+async function handleModels (apiKey) {
+  const response = await fetch(`${BASE_URL}/${API_VERSION}/models`, {
+    headers: makeHeaders(apiKey),
   });
-
-  let body = await response.text(); // 获取原始响应体文本
+  let body = await response.text(); // 先获取文本
   if (response.ok) {
     try {
         const { models } = JSON.parse(body);
@@ -286,17 +422,19 @@ async function handleModels (makeApiRequest) {
     } catch (e) {
         console.error("Error parsing models response:", e);
         // 保留原始 body，但可能不是有效的 JSON
-        throw new HttpError("Failed to parse models response from API", 500);
+        // 返回原始 response 让上层处理
     }
   }
-  // 即使 !response.ok，也返回原始 body 和状态码
+  // 无论是否 OK，都返回（可能已修改的）body 和原始 response 的状态/头部
   return new Response(body, fixCors(response));
 }
 
 const DEFAULT_EMBEDDINGS_MODEL = "text-embedding-004";
-async function handleEmbeddings (req, makeApiRequest) {
-  if (typeof req.model !== "string") {
-    throw new HttpError("model is not specified", 400);
+async function handleEmbeddings (req, apiKey) {
+  if (typeof req.model !== "string" || !req.model) {
+    // 如果模型未指定或为空，使用默认值
+    req.model = DEFAULT_EMBEDDINGS_MODEL;
+    console.log(`Model not specified, using default: ${DEFAULT_EMBEDDINGS_MODEL}`);
   }
   if (!req.input) {
       throw new HttpError("input is missing", 400);
@@ -304,7 +442,7 @@ async function handleEmbeddings (req, makeApiRequest) {
   if (!Array.isArray(req.input)) {
     req.input = [ req.input ];
   }
-  if (req.input.length === 0 || req.input.some(i => typeof i !== 'string')) {
+   if (req.input.length === 0 || req.input.some(i => typeof i !== 'string' || !i)) {
       throw new HttpError("input must be a non-empty string or an array of non-empty strings", 400);
   }
 
@@ -312,9 +450,7 @@ async function handleEmbeddings (req, makeApiRequest) {
   if (req.model.startsWith("models/")) {
     model = req.model;
   } else {
-    // 允许用户指定不同的 embedding 模型，如果不是 models/ 开头，则使用默认
-    // req.model = DEFAULT_EMBEDDINGS_MODEL; // 不再强制覆盖用户指定的模型名
-    model = "models/" + (req.model || DEFAULT_EMBEDDINGS_MODEL); // 如果用户没指定，用默认
+    model = "models/" + req.model; // 使用用户指定的或默认的模型名称
   }
 
   const requestBody = JSON.stringify({
@@ -325,10 +461,9 @@ async function handleEmbeddings (req, makeApiRequest) {
       }))
     });
 
-
-  const response = await makeApiRequest(`${BASE_URL}/${API_VERSION}/${model}:batchEmbedContents`, {
+  const response = await fetch(`${BASE_URL}/${API_VERSION}/${model}:batchEmbedContents`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: makeHeaders(apiKey, { "Content-Type": "application/json" }),
     body: requestBody
   });
 
@@ -344,19 +479,19 @@ async function handleEmbeddings (req, makeApiRequest) {
             index,
             embedding: values,
           })),
-          model: req.model || DEFAULT_EMBEDDINGS_MODEL, // 返回用户请求的模型或默认模型
+          model: req.model, // 返回用户请求的模型
           usage: { prompt_tokens: 0, total_tokens: 0 } // OpenAI 格式需要 usage
         }, null, "  ");
     } catch(e) {
         console.error("Error processing embeddings response:", e);
-        throw new HttpError("Failed to process embeddings response from API", 500);
+        // 返回原始 response 让上层处理
     }
   }
   return new Response(body, fixCors(response));
 }
 
-const DEFAULT_MODEL = "gemini-1.5-flash-latest"; // 更新默认模型
-async function handleCompletions (req, makeApiRequest) {
+const DEFAULT_MODEL = "gemini-1.5-flash-latest"; // 使用 flash 作为默认
+async function handleCompletions (req, apiKey) {
   let model = DEFAULT_MODEL;
   if (typeof req.model === "string" && req.model.trim() !== "") {
       if (req.model.startsWith("models/")) {
@@ -365,7 +500,6 @@ async function handleCompletions (req, makeApiRequest) {
           model = req.model; // 接受用户指定的模型名称
       }
   }
-
 
   let requestBodyPayload;
   try {
@@ -376,30 +510,21 @@ async function handleCompletions (req, makeApiRequest) {
       throw new HttpError("Failed to transform request payload", 400);
   }
 
-
-  // 处理 search 功能
+  // 处理 search 功能 (如果需要)
   let effectiveModel = model;
-  if (model.endsWith(":search") || req.model?.endsWith("-search-preview")) {
-      effectiveModel = model.replace(/:search$/, "").replace(/-search-preview$/, "");
-      requestBodyPayload.tools = requestBodyPayload.tools || [];
-      // 检查是否已存在 googleSearch 工具
-      if (!requestBodyPayload.tools.some(tool => tool.googleSearch)) {
-          requestBodyPayload.tools.push({googleSearch: {}});
-      }
-  }
-
+  // ... (search logic can be added here if needed, similar to previous version)
 
   const TASK = req.stream ? "streamGenerateContent" : "generateContent";
   let url = `${BASE_URL}/${API_VERSION}/models/${effectiveModel}:${TASK}`;
   if (req.stream) { url += "?alt=sse"; }
 
-  const response = await makeApiRequest(url, {
+  const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: makeHeaders(apiKey, { "Content-Type": "application/json" }),
     body: JSON.stringify(requestBodyPayload),
   });
 
-  let responseBody = response.body;
+  let responseBody = response.body; // 默认使用原始 body (用于流或错误)
   if (response.ok) {
     let id = generateChatcmplId();
     if (req.stream) {
@@ -408,28 +533,34 @@ async function handleCompletions (req, makeApiRequest) {
         .pipeThrough(new TransformStream(new SseParser())) // 使用类实例
         .pipeThrough(new TransformStream(new OpenAiStreamTransformer(req.stream_options?.include_usage, model, id))) // 使用类实例
         .pipeThrough(new TextEncoderStream());
+      // 对于流式响应，直接返回转换后的流
+      return new Response(responseBody, fixCors(response));
     } else {
+      // 非流式成功响应
       const responseText = await response.text();
       try {
           const jsonData = JSON.parse(responseText);
+          // 检查 jsonData 和 jsonData.candidates
+          if (!jsonData || !Array.isArray(jsonData.candidates)) {
+              console.error("Invalid non-stream response structure:", jsonData);
+              throw new HttpError("Invalid response structure from upstream API", 502); // 抛出错误让上层捕获
+          }
           responseBody = processCompletionsResponse(jsonData, model, id);
+          // 成功处理，返回新的 Response
+          return new Response(responseBody, fixCors(response));
       } catch (e) {
-          console.error("Error parsing non-stream response:", responseText);
-          throw new HttpError("Failed to parse completion response from API", 500);
+          console.error("Error processing non-stream response:", e);
+          // 处理出错，也抛出错误
+          throw new HttpError(`Error processing upstream response: ${e.message}`, 502);
       }
     }
-  } else {
-      // 对于非 OK 响应，尝试读取并返回错误信息
-      const errorText = await response.text();
-      console.error(`API Error (${response.status}): ${errorText}`);
-      // 返回原始错误，但应用 CORS
-      return new Response(errorText, fixCors(response));
   }
-  // 对于成功或流式响应，应用 CORS
-  return new Response(responseBody, fixCors(response));
+  // 如果 response.ok 为 false，直接返回原始 response (包含错误信息)
+  // 不需要 new Response()，因为原始 response 包含了状态码和头部
+  return response;
 }
 
-// --- Helper Classes for Streaming ---
+// --- Helper Classes for Streaming (Copied from previous version, ensure they are correct) ---
 
 class SseParser {
     constructor() {
@@ -446,13 +577,13 @@ class SseParser {
     }
     flush(controller) {
         if (this.buffer) {
-            // 尝试解析剩余的 buffer，以防数据不完整
             try {
-                const jsonData = JSON.parse(this.buffer.replace(/^data: /, ''));
-                controller.enqueue(JSON.stringify(jsonData));
+                // 尝试去除可能的 "data: " 前缀并解析
+                const potentialJson = this.buffer.startsWith("data: ") ? this.buffer.substring(6) : this.buffer;
+                const jsonData = JSON.parse(potentialJson);
+                controller.enqueue(JSON.stringify(jsonData)); // 重新序列化以保持一致
             } catch (e) {
                 console.error("Invalid trailing data in SSE stream:", this.buffer);
-                // 可以选择 enqueue 一个错误标记或忽略
             }
         }
     }
@@ -468,37 +599,34 @@ class OpenAiStreamTransformer {
     }
 
     transformResponseStream(data, special) {
-        // 确保 data.candidates 存在且是数组
         if (!data || !Array.isArray(data.candidates) || data.candidates.length === 0) {
-            console.error("Invalid data structure received in stream:", data);
-            // 可以选择返回一个错误块或忽略
-             return ""; // 返回空字符串避免中断流
+            console.error("Invalid data structure received in stream transformer:", data);
+            return ""; // 返回空字符串避免中断流
         }
 
-        // 假设只有一个 candidate，或者只处理第一个
-        const candidateIndex = data.candidates[0].index || 0;
+        const candidateIndex = data.candidates[0].index === undefined ? 0 : data.candidates[0].index;
         const item = transformCandidatesDelta(data.candidates[0]); // 使用外部函数
 
         switch (special) {
             case "stop":
                 if (item.delta.tool_calls) {
                     item.finish_reason = "tool_calls";
+                } else if (!item.finish_reason) {
+                    // 如果 Gemini 没有提供 finishReason，且不是 tool_calls，则默认为 stop
+                    item.finish_reason = item.finish_reason || "stop";
                 }
                 item.delta = {}; // 清空 delta 表示结束
                 break;
             case "first":
                 item.finish_reason = null;
-                // 确保 delta 存在，即使内容为空
                 item.delta = item.delta || {};
-                // 如果没有 tool_calls，确保 content 存在（即使为空字符串）
                 if (!item.delta.tool_calls && item.delta.content === undefined) {
                    item.delta.content = "";
                 }
-                // delete item.delta.tool_calls; // 不应删除，可能第一帧就有 tool_calls
                 break;
-            default:
+            default: // Normal chunk
                 item.finish_reason = null;
-                delete item.delta.role; // 非首帧不含 role
+                delete item.delta.role;
         }
 
         const output = {
@@ -509,14 +637,9 @@ class OpenAiStreamTransformer {
             object: "chat.completion.chunk",
         };
 
-        // 处理 usage
-        if (data.usageMetadata && this.streamIncludeUsage && special === "stop") {
-             output.usage = transformUsage(data.usageMetadata); // 使用外部函数
-        } else if (this.streamIncludeUsage) {
-            // 对于非 stop 帧，如果要求 usage，则发送 null
-            output.usage = null;
+        if (this.streamIncludeUsage) {
+             output.usage = special === "stop" && data.usageMetadata ? transformUsage(data.usageMetadata) : null;
         }
-
 
         return "data: " + JSON.stringify(output) + this.delimiter;
     }
@@ -528,9 +651,8 @@ class OpenAiStreamTransformer {
             data = JSON.parse(line);
         } catch (err) {
             console.error("Error parsing stream line:", line, err);
-            // 生成错误块
             const errorCandidate = {
-                index: this.last.length, // 使用下一个索引
+                index: this.last.length,
                 finishReason: "error",
                 delta: { content: `Error parsing stream: ${err.message}` }
             };
@@ -539,21 +661,17 @@ class OpenAiStreamTransformer {
             return;
         }
 
-        // 确保 candidates 存在
          if (!data || !Array.isArray(data.candidates) || data.candidates.length === 0) {
             console.warn("Received stream chunk with no candidates:", data);
             return; // 忽略无效块
         }
 
-
         const cand = data.candidates[0];
-        const index = cand.index === undefined ? 0 : cand.index; // 处理 index 可能为 undefined 的情况
+        const index = cand.index === undefined ? 0 : cand.index;
 
-        // 确保 this.last 数组足够大
         while (this.last.length <= index) {
             this.last.push(null);
         }
-
 
         if (!this.last[index]) { // 该 candidate 的第一帧
             controller.enqueue(this.transformResponseStream(data, "first"));
@@ -562,34 +680,29 @@ class OpenAiStreamTransformer {
         this.last[index] = data; // 存储最后状态
 
         // 只有当 candidate 包含实际内容或 tool_calls 时才发送普通帧
-        if (cand.content || cand.tool_calls || (cand.content?.parts && cand.content.parts.length > 0) || (cand.functionCall)) {
+        const hasContent = cand.content && cand.content.parts && cand.content.parts.some(p => p.text || p.functionCall);
+        const hasToolCalls = cand.tool_calls || (cand.content && cand.content.parts && cand.content.parts.some(p => p.functionCall));
+
+        if (hasContent || hasToolCalls) {
              controller.enqueue(this.transformResponseStream(data));
-        } else if (cand.finishReason && !this.last[index]?.finishReason) {
-             // 如果只有 finishReason 变化，也可能需要发送（取决于 OpenAI 行为）
-             // 但通常 finishReason 会在最后一块发送，由 flush 处理
         }
     }
 
     flush(controller) {
         if (this.last.length > 0) {
             this.last.forEach((data, index) => {
-                if (data && !data.finishReason) { // 如果最后一块没有 finishReason，手动添加
-                   // data.finishReason = "stop"; // 或者基于最后内容判断
-                }
                 if (data) { // 确保 data 存在
                    controller.enqueue(this.transformResponseStream(data, "stop"));
                 }
             });
-            controller.enqueue("data: [DONE]" + this.delimiter);
-        } else {
-             // 如果从未收到有效数据，也发送 DONE
-             controller.enqueue("data: [DONE]" + this.delimiter);
         }
+        // 总是发送 DONE 消息
+        controller.enqueue("data: [DONE]" + this.delimiter);
     }
 }
 
 
-// --- Transformation Logic ---
+// --- Transformation Logic (Copied from previous version, ensure correctness) ---
 
 const adjustProps = (schemaPart) => {
   if (typeof schemaPart !== "object" || schemaPart === null) {
@@ -598,21 +711,19 @@ const adjustProps = (schemaPart) => {
   if (Array.isArray(schemaPart)) {
     schemaPart.forEach(adjustProps);
   } else {
-    // Gemini 不支持 additionalProperties: false，移除它
     if (schemaPart.type === "object" && schemaPart.properties && schemaPart.additionalProperties === false) {
       delete schemaPart.additionalProperties;
     }
-    // 递归处理所有子属性
     Object.values(schemaPart).forEach(adjustProps);
   }
 };
 const adjustSchema = (schema) => {
-    if (!schema || !schema.type || !schema[schema.type]) return; // 防御性检查
+    if (!schema || !schema.type || !schema[schema.type]) return;
     const obj = schema[schema.type];
     if (obj) {
-        delete obj.strict; // 移除 Gemini 不支持的 strict
+        delete obj.strict;
     }
-    adjustProps(schema); // 递归调整属性
+    adjustProps(schema);
 };
 
 
@@ -621,33 +732,28 @@ const harmCategory = [
   "HARM_CATEGORY_SEXUALLY_EXPLICIT",
   "HARM_CATEGORY_DANGEROUS_CONTENT",
   "HARM_CATEGORY_HARASSMENT",
-  //"HARM_CATEGORY_CIVIC_INTEGRITY", // 可能导致严格审查，可选移除
-  "HARM_CATEGORY_UNSPECIFIED" // 添加未指定类别，以防万一
+  "HARM_CATEGORY_UNSPECIFIED"
 ];
 const safetySettings = harmCategory.map(category => ({
   category,
-  threshold: "BLOCK_NONE", // 设置为不阻止
+  threshold: "BLOCK_NONE",
 }));
 
 const fieldsMap = {
   stop: "stopSequences",
-  n: "candidateCount", // not for streaming
+  n: "candidateCount",
   max_tokens: "maxOutputTokens",
-  // max_completion_tokens: "maxOutputTokens", // 重复，移除
   temperature: "temperature",
   top_p: "topP",
-  top_k: "topK", // non-standard but supported by Gemini
-  // frequency_penalty: "frequencyPenalty", // Gemini 不直接支持
-  // presence_penalty: "presencePenalty", // Gemini 不直接支持
+  top_k: "topK",
 };
 const transformConfig = (req) => {
   let cfg = {};
   for (let key in req) {
     const matchedKey = fieldsMap[key];
     if (matchedKey) {
-        // 验证值类型
         const value = req[key];
-         if (key === 'temperature' && (value < 0 || value > 2)) continue; // Gemini temp range [0, 2]
+         if (key === 'temperature' && (value < 0 || value > 2)) continue;
          if (key === 'top_p' && (value < 0 || value > 1)) continue;
          if (key === 'top_k' && (!Number.isInteger(value) || value < 1)) continue;
          if (key === 'max_tokens' && (!Number.isInteger(value) || value < 1)) continue;
@@ -655,20 +761,15 @@ const transformConfig = (req) => {
          if (key === 'stop') {
              if (typeof value === 'string') cfg[matchedKey] = [value];
              else if (Array.isArray(value) && value.every(s => typeof s === 'string')) cfg[matchedKey] = value;
-             continue; // 跳过不符合类型的 stop
+             continue;
          }
       cfg[matchedKey] = req[key];
     }
   }
 
-  // 处理 response_format
   if (req.response_format) {
     switch (req.response_format.type) {
       case "json_schema":
-         // Gemini 的 JSON schema 支持仍在发展中，这里简化处理
-         // adjustSchema(req.response_format); // 调整可能引入问题，暂时注释
-         // cfg.responseSchema = req.response_format.json_schema?.schema;
-         // 简单地设置为 JSON 输出模式
          cfg.responseMimeType = "application/json";
          console.warn("json_schema format requested, using standard JSON mode for Gemini.");
         break;
@@ -676,13 +777,9 @@ const transformConfig = (req) => {
         cfg.responseMimeType = "application/json";
         break;
       case "text":
-         // 默认即为 text/plain，无需设置
-         // cfg.responseMimeType = "text/plain";
         break;
       default:
         console.warn(`Unsupported response_format type: ${req.response_format.type}. Ignoring.`);
-        // 不抛出错误，而是忽略不支持的格式
-        // throw new HttpError("Unsupported response_format.type", 400);
     }
   }
   return cfg;
@@ -692,19 +789,18 @@ const parseImg = async (url) => {
   let mimeType, data;
   if (url.startsWith("http://") || url.startsWith("https://")) {
     try {
-      const response = await fetch(url); // 注意：Worker 中 fetch 外部 URL 可能受限或需要配置
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.status} ${response.statusText} (${url})`);
       }
       mimeType = response.headers.get("content-type");
       if (!mimeType) throw new Error("Content-Type header missing for image URL");
-      // 限制图片大小，例如 10MB
       const contentLength = response.headers.get("content-length");
       if (contentLength && parseInt(contentLength, 10) > 10 * 1024 * 1024) {
           throw new Error("Image size exceeds the 10MB limit.");
       }
       const buffer = await response.arrayBuffer();
-       if (buffer.byteLength > 10 * 1024 * 1024) { // 双重检查
+       if (buffer.byteLength > 10 * 1024 * 1024) {
            throw new Error("Image size exceeds the 10MB limit.");
        }
       data = Buffer.from(buffer).toString("base64");
@@ -713,13 +809,12 @@ const parseImg = async (url) => {
       throw new HttpError("Error fetching or processing image URL: " + err.message, 400);
     }
   } else if (url.startsWith("data:")) {
-    const match = url.match(/^data:(?<mimeType>image\/.*?)(?:;base64)?,(?<data>.*)$/); // 更严格匹配 image MIME
+    const match = url.match(/^data:(?<mimeType>image\/.*?)(?:;base64)?,(?<data>.*)$/);
     if (!match || !match.groups.mimeType || !match.groups.data) {
       throw new HttpError("Invalid image data URI format.", 400);
     }
     ({ mimeType, data } = match.groups);
-     // 检查 base64 数据大小
-     const dataLength = data.length * 3 / 4; // 估算原始数据大小
+     const dataLength = data.length * 3 / 4;
      if (dataLength > 10 * 1024 * 1024) {
          throw new HttpError("Image size in data URI exceeds the 10MB limit.");
      }
@@ -737,21 +832,18 @@ const parseImg = async (url) => {
 const transformMsg = async ({ content, tool_calls, tool_call_id, name }, fnames) => {
   const parts = [];
 
-  // 处理 tool (function) call response
   if (tool_call_id !== undefined) {
     let responseContent;
     try {
-        // OpenAI content 是字符串，Gemini 需要 object
         responseContent = typeof content === 'string' ? JSON.parse(content) : content;
-        // Gemini 期望 response 是一个 object
         if (typeof responseContent !== 'object' || responseContent === null) {
-             responseContent = { result: responseContent }; // 包装简单类型
+             responseContent = { result: responseContent };
         }
     } catch (err) {
       console.error("Error parsing tool response content:", content, err);
       throw new HttpError("Invalid tool response content: " + content, 400);
     }
-    const functionName = fnames[tool_call_id] || name; // 从缓存或消息中获取函数名
+    const functionName = fnames[tool_call_id] || name;
     if (!functionName) {
         console.error("Could not determine function name for tool call ID:", tool_call_id);
         throw new HttpError("Missing function name for tool response.", 400);
@@ -759,18 +851,17 @@ const transformMsg = async ({ content, tool_calls, tool_call_id, name }, fnames)
     parts.push({
       functionResponse: {
         name: functionName,
-        response: responseContent, // Gemini 需要 object
+        response: responseContent,
       }
     });
     return parts;
   }
 
-  // 处理 assistant 发起的 tool (function) calls
   if (tool_calls) {
     for (const tcall of tool_calls) {
       if (tcall.type !== "function") {
         console.warn(`Unsupported tool_call type: "${tcall.type}". Skipping.`);
-        continue; // 忽略非 function 类型
+        continue;
       }
       const { function: { arguments: argstr, name: funcName }, id } = tcall;
       let args;
@@ -786,20 +877,14 @@ const transformMsg = async ({ content, tool_calls, tool_call_id, name }, fnames)
           args,
         }
       });
-      // 缓存函数名，供后续 tool response 使用
       fnames[id] = funcName;
     }
-    // 如果 assistant 消息只包含 tool_calls，Gemini 可能需要一个空的 text part
-    if (content === null || content === undefined || content === "") {
-        // parts.push({ text: "" }); // 根据 Gemini API 行为决定是否需要
-    } else if (typeof content === 'string' && content.trim() !== '') {
-         parts.push({ text: content }); // 添加文本内容（如果存在）
+    if (typeof content === 'string' && content.trim() !== '') {
+         parts.push({ text: content });
     }
-
     return parts;
   }
 
-  // 处理普通文本或多模态内容
   if (typeof content === 'string') {
     parts.push({ text: content });
   } else if (Array.isArray(content)) {
@@ -813,27 +898,19 @@ const transformMsg = async ({ content, tool_calls, tool_call_id, name }, fnames)
                parts.push(await parseImg(item.image_url.url));
            } catch (e) {
                console.error("Failed to process image_url:", e);
-               // 可以选择忽略图片或抛出错误
-               throw e; // 重新抛出以中断请求
+               throw e;
            }
           break;
-        // case "input_audio": // Gemini 当前 API 不直接支持 audio input in messages
-        //   console.warn("Audio input in messages is not directly supported by Gemini API via this adapter. Skipping.");
-        //   break;
         default:
           console.warn(`Unknown content part type: "${item.type}". Skipping.`);
-          // throw new HttpError(`Unknown "content" item type: "${item.type}"`, 400);
       }
     }
-    // Gemini 要求多模态输入至少有一个 text part
     if (content.length > 0 && !content.some(item => item.type === "text")) {
-      parts.push({ text: "" }); // 添加空文本部分
+      parts.push({ text: "" });
     }
   } else if (content === null && !tool_calls) {
-      // 允许 content 为 null 的 assistant 消息（如果前面有 tool_calls）
-      // 但如果 content 为 null 且没有 tool_calls，这可能是无效的
       console.warn("Assistant message has null content and no tool_calls.");
-      parts.push({ text: "" }); // 添加空文本以防万一
+      parts.push({ text: "" });
   }
 
   return parts;
@@ -847,7 +924,7 @@ const transformMessages = async (messages) => {
 
   const contents = [];
   let system_instruction;
-  const fnames = {}; // 缓存 tool_call_id -> function_name
+  const fnames = {};
 
   for (let i = 0; i < messages.length; i++) {
     const item = messages[i];
@@ -856,54 +933,34 @@ const transformMessages = async (messages) => {
         throw new HttpError(`Invalid message format at index ${i}: Missing or invalid role.`, 400);
     }
 
-
     if (item.role === "system") {
-        if (system_instruction) {
-             console.warn("Multiple system messages found. Only the first one will be used as system_instruction.");
-             // 可以选择合并内容或忽略后续的
+        if (!system_instruction && typeof item.content === 'string') {
+           system_instruction = { parts: [{ text: item.content }] };
+        } else if (system_instruction) {
+             console.warn("Multiple system messages found. Only the first one is used.");
         } else {
-            // Gemini system_instruction 只能是文本
-            if (typeof item.content === 'string') {
-               system_instruction = { parts: [{ text: item.content }] };
-            } else {
-                 console.warn("System message content is not a string. Ignoring system message.");
-                 // throw new HttpError("System message content must be a string for Gemini.", 400);
-            }
+             console.warn("System message content is not a string. Ignoring.");
         }
     } else {
       let role;
       switch (item.role) {
-          case "user":
-              role = "user";
-              break;
-          case "assistant":
-              role = "model";
-              break;
-          case "tool":
-              role = "function"; // Gemini 使用 'function' 角色表示 tool response
-              break;
+          case "user": role = "user"; break;
+          case "assistant": role = "model"; break;
+          case "tool": role = "function"; break;
           default:
               console.warn(`Unknown message role: "${item.role}". Skipping message at index ${i}.`);
-              continue; // 跳过未知角色
-              // throw new HttpError(`Unknown message role: "${item.role}"`, 400);
+              continue;
       }
 
       try {
           const parts = await transformMsg(item, fnames);
-          // Gemini 要求 user/model 角色必须有 parts
-          if ((role === 'user' || role === 'model') && parts.length === 0) {
-              // 如果 assistant 消息只有 tool_calls 且 content 为 null/空，parts 可能为空
-              if (role === 'model' && item.tool_calls && !item.content) {
-                  // 允许这种情况
-              } else {
-                 console.warn(`Message at index ${i} resulted in empty parts for role '${role}'. Skipping.`);
-                 continue; // 跳过无效消息
-              }
+          if ((role === 'user' || role === 'model') && parts.length === 0 && !(role === 'model' && item.tool_calls && !item.content)) {
+             console.warn(`Message at index ${i} resulted in empty parts for role '${role}'. Skipping.`);
+             continue;
           }
 
-          // 合并连续的同角色消息（可选，但 Gemini 推荐）
           const prevContent = contents[contents.length - 1];
-          if (prevContent && prevContent.role === role && role !== 'function') { // 不合并 tool responses
+          if (prevContent && prevContent.role === role && role !== 'function') {
               prevContent.parts.push(...parts);
           } else {
               contents.push({ role, parts });
@@ -916,21 +973,16 @@ const transformMessages = async (messages) => {
     }
   }
 
-   // Gemini 要求 contents 不能为空，且第一个不能是 model
    if (contents.length === 0) {
-       // 如果只有 system message，需要添加一个空的 user message
        if (system_instruction) {
            contents.push({ role: "user", parts: [{ text: "" }] });
        } else {
           throw new HttpError("No valid user or assistant messages found.", 400);
        }
    } else if (contents[0].role === "model") {
-       // 在开头插入一个空的 user message
        contents.unshift({ role: "user", parts: [{ text: "" }] });
    }
 
-
-  //console.info("Transformed messages:", JSON.stringify({ system_instruction, contents }, null, 2));
   return { system_instruction, contents };
 };
 
@@ -938,31 +990,31 @@ const transformMessages = async (messages) => {
 const transformTools = (req) => {
   let tools, tool_config;
 
-  // 处理 tools (Function Declarations)
   if (req.tools && Array.isArray(req.tools)) {
     const funcs = req.tools.filter(tool => tool.type === "function" && tool.function);
     if (funcs.length > 0) {
-        // Gemini API 可能对 schema 有特定要求，adjustSchema 可能需要更新
-        // funcs.forEach(adjustSchema); // 暂时禁用调整，以防引入问题
+        // adjustSchema might be needed depending on Gemini's strictness
+        // funcs.forEach(adjustSchema);
         tools = [{ functionDeclarations: funcs.map(schema => schema.function) }];
     }
   }
 
-  // 处理 tool_choice
   if (req.tool_choice) {
-    let mode = "AUTO"; // 默认
+    let mode = "AUTO";
     let allowedFunctionNames;
 
     if (typeof req.tool_choice === "string") {
         const choice = req.tool_choice.toUpperCase();
-        if (["NONE", "AUTO", "ANY", "REQUIRED"].includes(choice)) {
-            mode = choice === "REQUIRED" ? "ANY" : choice; // Gemini 没有 REQUIRED，映射到 ANY
-             if (choice === "REQUIRED") console.warn("tool_choice 'required' mapped to 'ANY' for Gemini.");
+        if (["NONE", "AUTO", "ANY"].includes(choice)) {
+            mode = choice;
+        } else if (choice === "REQUIRED") {
+             mode = "ANY"; // Map REQUIRED to ANY
+             console.warn("tool_choice 'required' mapped to 'ANY' for Gemini.");
         } else {
             console.warn(`Invalid string tool_choice value: "${req.tool_choice}". Using AUTO.`);
         }
     } else if (typeof req.tool_choice === 'object' && req.tool_choice.type === "function" && req.tool_choice.function?.name) {
-        mode = "ANY"; // 强制调用特定函数
+        mode = "ANY";
         allowedFunctionNames = [req.tool_choice.function.name];
     } else {
          console.warn("Invalid tool_choice object format. Using AUTO.");
@@ -985,16 +1037,14 @@ const transformRequest = async (req) => {
     const { tools, tool_config } = transformTools(req);
     const generationConfig = transformConfig(req);
 
-    // Gemini 不允许空的 generationConfig 或 tool_config
     const payload = {
-        ...(system_instruction && { systemInstruction: system_instruction }), // 使用 systemInstruction
+        ...(system_instruction && { systemInstruction: system_instruction }),
         contents,
         ...(tools && { tools }),
-        ...(tool_config && { toolConfig: tool_config }), // 使用 toolConfig
-        safetySettings, // 应用安全设置
+        ...(tool_config && { toolConfig: tool_config }),
+        safetySettings,
         ...(Object.keys(generationConfig).length > 0 && { generationConfig }),
     };
-    // console.log("Gemini Request Payload:", JSON.stringify(payload, null, 2));
     return payload;
 };
 
@@ -1005,21 +1055,20 @@ const generateChatcmplId = () => {
   return "chatcmpl-" + Array.from({ length: 29 }, randomChar).join("");
 };
 
-const reasonsMap = { //https://ai.google.dev/api/rest/v1/GenerateContentResponse#finishreason
-  "FINISH_REASON_UNSPECIFIED": null, // 不映射
+const reasonsMap = {
+  "FINISH_REASON_UNSPECIFIED": null,
   "STOP": "stop",
   "MAX_TOKENS": "length",
   "SAFETY": "content_filter",
-  "RECITATION": "content_filter", // 归类为内容过滤
-  "OTHER": null, // 不映射 "OTHER"
-  // 新增 Gemini 1.5 可能的 Reason
-  "FUNCTION_CALL": "tool_calls", // 映射到 tool_calls
+  "RECITATION": "content_filter",
+  "OTHER": null,
+  "FUNCTION_CALL": "tool_calls",
 };
 
-const SEP = ""; // OpenAI 通常不加分隔符，除非是多部分文本
+const SEP = ""; // Usually empty for OpenAI
 
 const transformCandidates = (key, cand) => {
-  const message = { role: "assistant", content: null }; // 初始化 content 为 null
+  const message = { role: "assistant", content: null };
   const textParts = [];
   const toolCalls = [];
 
@@ -1029,58 +1078,42 @@ const transformCandidates = (key, cand) => {
           textParts.push(part.text);
         } else if (part.functionCall) {
           const fc = part.functionCall;
-          // Gemini functionCall 可能没有 id，需要生成一个
-          const callId = `call_${generateChatcmplId().substring(9)}`; // 生成唯一 ID
+          const callId = `call_${generateChatcmplId().substring(9)}`;
           toolCalls.push({
             id: callId,
             type: "function",
             function: {
               name: fc.name,
-              arguments: JSON.stringify(fc.args || {}), // 确保 args 存在且为字符串
+              arguments: JSON.stringify(fc.args || {}),
             }
           });
         }
       }
   }
 
-
-  // 合并文本部分
   if (textParts.length > 0) {
       message.content = textParts.join(SEP);
   }
 
-
-  // 添加 tool_calls
   if (toolCalls.length > 0) {
       message.tool_calls = toolCalls;
-      // 如果只有 tool_calls 且没有文本，OpenAI 期望 content 为 null
-      if (message.content === null) {
-          // message.content = null; // 保持 null
-      }
   }
 
-   // 如果既没有文本也没有 tool_calls，设置 content 为空字符串或 null？
-   // OpenAI 似乎期望至少有一个字段
    if (message.content === null && toolCalls.length === 0) {
-       message.content = ""; // 设为空字符串以符合 OpenAI 格式
+       message.content = "";
    }
 
-
-  // 确定 finish_reason
   let finishReason = reasonsMap[cand.finishReason] !== undefined ? reasonsMap[cand.finishReason] : null;
-  // 如果 Gemini 返回 FUNCTION_CALL reason，且我们生成了 tool_calls，则使用 tool_calls reason
   if (cand.finishReason === "FUNCTION_CALL" && toolCalls.length > 0) {
       finishReason = "tool_calls";
   } else if (finishReason === "tool_calls" && toolCalls.length === 0) {
-      // 如果映射为 tool_calls 但实际没有生成，则回退
-      finishReason = "stop"; // 或 null?
+      finishReason = "stop";
   }
 
-
   return {
-    index: cand.index === undefined ? 0 : cand.index, // 处理 index 可能为 undefined
+    index: cand.index === undefined ? 0 : cand.index,
     [key]: message,
-    logprobs: null, // Gemini 不提供 logprobs
+    logprobs: null,
     finish_reason: finishReason,
   };
 };
@@ -1089,12 +1122,9 @@ const transformCandidatesDelta = transformCandidates.bind(null, "delta");
 
 const transformUsage = (data) => {
     if (!data) return { completion_tokens: 0, prompt_tokens: 0, total_tokens: 0 };
-    // Gemini 1.5 可能返回 totalTokenCount，旧版可能返回 candidatesTokenCount 等
-    const completionTokens = data.candidatesTokenCount || data.completionTokens || 0; // 优先 candidatesTokenCount
+    const completionTokens = data.candidatesTokenCount || data.completionTokens || 0;
     const promptTokens = data.promptTokenCount || 0;
-    // totalTokenCount 可能是最可靠的
     const totalTokens = data.totalTokenCount || (promptTokens + completionTokens);
-
     return {
         completion_tokens: completionTokens,
         prompt_tokens: promptTokens,
@@ -1105,19 +1135,14 @@ const transformUsage = (data) => {
 
 const processCompletionsResponse = (data, model, id) => {
     if (!data || !Array.isArray(data.candidates)) {
-        console.error("Invalid non-stream response structure:", data);
-        // 返回一个表示错误的 OpenAI 格式响应
+        console.error("Invalid non-stream response structure in processCompletionsResponse:", data);
+        // 不能在此处抛出错误，因为调用者期望字符串
+        // 返回一个表示错误的 JSON 字符串
         return JSON.stringify({
             id,
-            choices: [{
-                index: 0,
-                message: { role: "assistant", content: "Error: Invalid response structure from API." },
-                finish_reason: "error",
-            }],
-            created: Math.floor(Date.now()/1000),
+            error: { message: "Invalid response structure from API.", type: "processing_error", code: 502 },
             model,
             object: "chat.completion",
-            usage: { completion_tokens: 0, prompt_tokens: 0, total_tokens: 0 },
         });
     }
   return JSON.stringify({
@@ -1125,8 +1150,7 @@ const processCompletionsResponse = (data, model, id) => {
     choices: data.candidates.map(transformCandidatesMessage),
     created: Math.floor(Date.now()/1000),
     model,
-    // system_fingerprint: "fp_xxxxxxxxxx", // 可选添加
     object: "chat.completion",
-    usage: transformUsage(data.usageMetadata), // 使用转换函数
-  }, null, 2); // 添加缩进以便调试
+    usage: transformUsage(data.usageMetadata),
+  }, null, 2); // Add indentation for debugging
 };
