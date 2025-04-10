@@ -740,8 +740,10 @@ function transformResponseStream (data, special) {
     //system_fingerprint: "fp_69829325d0",
     object: "chat.completion.chunk",
   };
+  // 检查是否是流结束且需要包含 usage
   if (data.usageMetadata && this.streamIncludeUsage) {
-    output.usage = stop ? transformUsage(data.usageMetadata) : null;
+    // 修复：使用 special 参数判断是否是停止帧
+    output.usage = (special === "stop") ? transformUsage(data.usageMetadata) : null;
   }
   return "data: " + JSON.stringify(output) + delimiter;
 }
