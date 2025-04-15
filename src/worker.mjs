@@ -1,14 +1,10 @@
+好的，这是替换了 `API_KEYS` 数组内容后的完整代码：
+
+```javascript
 import { Buffer } from "node:buffer";
 
 // API 密钥库
 const API_KEYS = [
-  "AIzaSyAsCGQBOD8RfuwxebgwqPPyHtAdgx3aTMo",
-  "AIzaSyCMKZVt7hSY6lqhrOpbDzZM-0xKmt0ShX4",
-  "AIzaSyCgk-aTLlS3mwK9zhb9tceyvn3eNXaV9YQ",
-  "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
-  "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
-  "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
-  "AIzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
   "AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
   "AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
   "AIzaSyB95dY2-qkDpy7PC5fe-jD1wNzF5vKXOGc",
@@ -55,12 +51,11 @@ const API_KEYS = [
   "AIzaSyCafCTw_Ja7d_ovpI57MxjmyDtTVlgintQ",
   "AIzaSyDB5lc55kkDEh7nhGRFnHy-xPeffiENFd0",
   "AIzaSyDeEXtAG4qOV9z20GgDnYRREWPnAMtjlW8",
-  "AIzaSyBpTgfUuODNgYKVbgtGxqCiAjd8lTtnsgI",
+  // 注意：您提供的列表中有一个空行，这里将其省略了
   "AIzaSyB8akwchatPzc8OG6JBd7kh-5MF798Maj4",
   "AIzaSyDrEkwdLhI0MRPN6dsjF4mJrhBReU32k8A",
   "AIzaSyDRVJGGv6hpYEItzTpiUW31ym7xM4Nj9qE",
   "AIzaSyAjmCaL-HItCJYRQi7KdzzbU4wHt0UgHHI",
-  "AIzaSyCE1-Ut41Wmgip49sy4opm4s6HunbOXVzk",
   "AIzaSyCYlmI4u6zb02g2JOMgSIKHZZMU2jOrV8c",
   "AIzaSyAS_gpGU0InGtwswGtcMnydHORG43cgl5Q",
   "AIzaSyB2zdEIwMUI7c7LQYrQYD-rKxXzgi7u_-I",
@@ -76,6 +71,16 @@ const API_KEYS = [
   "AIzaSyBVEQnvx3-uwVTN1-HCgCpgp2hXyKf4eLg",
   "AIzaSyCvnLhM4XWf70enFVo9eeV8YS_crvdd18Y",
   "AIzaSyBIZfeSx6XmheGBDdc0zN3o1WwoKWDtL_k",
+  "AIzaSyCkZN6AoA_cce8UMV29jscOP9t8N5JXeNg",
+  "AIzaSyCMKZVt7hSY6lqhrOpbDzZM-0xKmt0ShX4",
+  "AIzaSyDP1G0xfezLl7u8rMxv408h3anhTNXcvkI",
+  "AIzaSyAsCGQBOD8RfuwxebgwqPPyHtAdgx3aTMo",
+  "AIzaSyCMKZVt7hSY6lqhrOpbDzZM-0xKmt0ShX4",
+  "AIzaSyCgk-aTLlS3mwK9zhb9tceyvn3eNXaV9YQ",
+  "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
+  "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
+  "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
+  "AIzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
 ].filter(k => k); // 过滤掉可能的空字符串
 
 // 密钥轮询全局索引
@@ -784,3 +789,4 @@ function toOpenAiStreamFlush (controller) {
     controller.enqueue("data: [DONE]" + delimiter);
   }
 }
+```
