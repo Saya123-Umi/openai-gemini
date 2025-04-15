@@ -1,6 +1,5 @@
 import { Buffer } from "node:buffer";
 
-// API 密钥库
 const API_KEYS = [
   "AIzaSyB02l4rQupQvBHHyCgDOw_aOOIomKDzgas",
   "AIzaSyCqow0ScY63mqqbzmnopyqDMsZYfCp7ZoY",
@@ -48,7 +47,6 @@ const API_KEYS = [
   "AIzaSyCafCTw_Ja7d_ovpI57MxjmyDtTVlgintQ",
   "AIzaSyDB5lc55kkDEh7nhGRFnHy-xPeffiENFd0",
   "AIzaSyDeEXtAG4qOV9z20GgDnYRREWPnAMtjlW8",
-  // 注意：您提供的列表中有一个空行，这里将其省略了
   "AIzaSyB8akwchatPzc8OG6JBd7kh-5MF798Maj4",
   "AIzaSyDrEkwdLhI0MRPN6dsjF4mJrhBReU32k8A",
   "AIzaSyDRVJGGv6hpYEItzTpiUW31ym7xM4Nj9qE",
@@ -77,16 +75,82 @@ const API_KEYS = [
   "AIzaSyAxfmFOWgzhOSOvAhhwszbfkjM1FCgYpnA",
   "AIzaSyCHNVCrMyX5Ud0rvPy-G9DXtazD8JIbEvU",
   "AIzaSyA_iVclQbREs7FRSeAM9rno4AkexsSGK5I",
-  "AIzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok",
-].filter(k => k); // 过滤掉可能的空字符串
+  "AIzaSyACfVIGGEdNZ1e9reywq1xBfCUdSxYXBok"
+];
 
-// 密钥轮询全局索引
-let keyIndex = 0;
+let currentApiKeyIndex = 0;
+const MAX_RETRIES_PER_KEY = 1; // 每个密钥重试一次即换下一个
+const MAX_ROUNDS = 3; // 最多轮询3轮
 
-// 辅助函数：获取轮询密钥
-function getApiKeyForRotation(index) {
-  if (API_KEYS.length === 0) return null;
-  return API_KEYS[index % API_KEYS.length];
+async function fetchWithRetry (url, options) {
+  let round = 0;
+  let attempts = 0;
+  const totalKeys = API_KEYS.length;
+
+  while (round < MAX_ROUNDS) {
+    const apiKey = API_KEYS[currentApiKeyIndex];
+    const displayKey = apiKey.slice(-6);
+    attempts++;
+
+    // 将 API Key 添加到请求头
+    options.headers = {
+      ...options.headers,
+      "x-goog-api-key": apiKey,
+      // 清除可能存在的旧 Authorization 头，避免冲突
+      "Authorization": undefined,
+    };
+    // 移除 headers 中值为 undefined 的项
+    Object.keys(options.headers).forEach(key => options.headers[key] === undefined && delete options.headers[key]);
+
+
+    console.log(`轮询 ${round + 1}/${MAX_ROUNDS}, 尝试 ${attempts}/${totalKeys * MAX_ROUNDS}, 密钥: ...${displayKey}`);
+
+    try {
+      const response = await fetch(url, options);
+
+      console.log(`状态码: ${response.status}`);
+
+      if (response.ok) {
+        console.log(`成功!`);
+        return response; // 成功则返回响应
+      }
+
+      // 检查是否是需要切换密钥的错误
+      if ([400, 403, 429, 500].includes(response.status)) {
+        console.log(`密钥 ...${displayKey} 失败，尝试下一个...`);
+        currentApiKeyIndex = (currentApiKeyIndex + 1);
+        if (currentApiKeyIndex >= totalKeys) {
+            currentApiKeyIndex = 0; // 回到第一个密钥
+            round++; // 完成一轮
+            console.log(`完成第 ${round} 轮轮询`);
+        }
+        // 不需要显式 continue，循环会自动进行下一次迭代
+      } else {
+        // 对于其他非预期错误，直接抛出，不再重试
+        console.error(`发生不可重试错误: ${response.status}`);
+        throw new HttpError(await response.text(), response.status);
+      }
+    } catch (error) {
+      // 网络错误或其他 fetch 异常
+      console.error(`Fetch 异常: ${error.message}, 密钥: ...${displayKey}, 尝试下一个...`);
+      currentApiKeyIndex = (currentApiKeyIndex + 1);
+        if (currentApiKeyIndex >= totalKeys) {
+            currentApiKeyIndex = 0; // 回到第一个密钥
+            round++; // 完成一轮
+            console.log(`完成第 ${round} 轮轮询`);
+        }
+      // 检查是否是 HttpError，如果是则可能是上一步抛出的不可重试错误
+      if (error instanceof HttpError && ![400, 403, 429, 500].includes(error.status)) {
+          throw error; // 如果不是需要切换密钥的 HttpError，则重新抛出
+      }
+      // 其他 fetch 异常（网络问题等）也切换密钥并重试
+    }
+    // 短暂延迟避免过快重试（可选）
+    // await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  // 如果三轮循环后仍然失败
+  throw new HttpError(`API 请求失败，已尝试所有密钥 ${MAX_ROUNDS} 轮`, 500);
 }
 
 export default {
@@ -94,144 +158,43 @@ export default {
     if (request.method === "OPTIONS") {
       return handleOPTIONS();
     }
-
-    const errHandler = (err, status = 500) => {
-      console.error("错误处理程序捕获:", err);
-      const errorStatus = err instanceof HttpError ? err.status : status;
+    const errHandler = (err) => {
+      console.error(err);
+      // 确保返回的是 Response 对象
+      const status = err instanceof HttpError ? err.status : 500;
       const message = err instanceof Error ? err.message : String(err);
-      // 返回 JSON 格式的错误信息
-      return new Response(JSON.stringify({ error: { message, type: err.name, code: errorStatus } }), fixCors({ status: errorStatus, headers: { "Content-Type": "application/json" } }));
+      return new Response(message, fixCors({ status }));
     };
-
     try {
+      // 不再从请求头获取 apiKey，由 fetchWithRetry 处理
+      // const auth = request.headers.get("Authorization");
+      // const apiKey = auth?.split(" ")[1];
+      const assert = (success) => {
+        if (!success) {
+          throw new HttpError("The specified HTTP method is not allowed for the requested resource", 400); // 保持400状态码
+        }
+      };
       const { pathname } = new URL(request.url);
-      const auth = request.headers.get("Authorization");
-      const providedKey = auth?.split(" ")[1];
-
-      // 确定是否使用轮询模式
-      // 如果没有提供 key 或者 key 是 "rotate"，则使用轮询
-      const isRotating = (!providedKey || providedKey === "rotate") && API_KEYS.length > 0;
-
-      let attempts = 0;
-      const maxAttempts = isRotating ? API_KEYS.length * 3 : 1; // 最多轮询 3 轮
-      let currentKeyIndex = keyIndex; // 本次请求尝试的起始索引
-      let lastErrorResponse = null;
-
-      console.log(`开始处理请求 ${pathname}. 模式: ${isRotating ? '轮询' : '指定密钥'}. 最大尝试: ${maxAttempts}.`);
-
-      while (attempts < maxAttempts) {
-        attempts++;
-        let apiKeyToUse;
-
-        if (isRotating) {
-          apiKeyToUse = getApiKeyForRotation(currentKeyIndex);
-          if (!apiKeyToUse) {
-             console.error(`轮询尝试 ${attempts}: 无法获取密钥 (索引 ${currentKeyIndex})，密钥库可能为空或已被清空。`);
-             // 如果第一次尝试就失败，则抛出错误；否则跳出循环，使用上一次错误
-             if (!lastErrorResponse) throw new HttpError("No API keys available for rotation.", 500);
-             break;
-          }
-          const currentRound = Math.floor((currentKeyIndex % (API_KEYS.length * 3)) / API_KEYS.length) + 1;
-          console.log(`轮次 ${currentRound}/3 | 尝试 ${attempts}/${maxAttempts} | 密钥索引 ${currentKeyIndex % API_KEYS.length} (...${apiKeyToUse.slice(-4)})`);
-        } else {
-          apiKeyToUse = providedKey; // 使用用户提供的特定密钥
-          if (!apiKeyToUse) {
-            // 如果用户没提供密钥，并且密钥库为空，则出错
-            if (API_KEYS.length === 0) {
-               throw new HttpError("Authorization header is missing and no fallback API keys available.", 401);
-            } else {
-               // 理论上不应到达这里，因为 isRotating 会是 true
-               console.warn("未提供密钥，但未进入轮询模式？回退到第一个密钥。");
-               apiKeyToUse = API_KEYS[0];
-            }
-          }
-           console.log(`尝试 ${attempts}/${maxAttempts} | 使用指定密钥 (...${apiKeyToUse.slice(-4)})`);
-        }
-
-        // 克隆请求以备重试，因为 body 只能读一次 (GET 不需要)
-        const clonedRequest = request.method !== "GET" ? request.clone() : request;
-        let response;
-
-        try {
-          const assert = (success) => {
-            if (!success) {
-              throw new HttpError(`Method ${request.method} not allowed for ${pathname}`, 405);
-            }
-          };
-
-          // --- 调用核心处理逻辑 ---
-          switch (true) {
-            case pathname.endsWith("/chat/completions"):
-              assert(request.method === "POST");
-              response = await handleCompletions(await clonedRequest.json(), apiKeyToUse);
-              break;
-            case pathname.endsWith("/embeddings"):
-              assert(request.method === "POST");
-              response = await handleEmbeddings(await clonedRequest.json(), apiKeyToUse);
-              break;
-            case pathname.endsWith("/models"):
-              assert(request.method === "GET");
-              response = await handleModels(apiKeyToUse);
-              break;
-            default:
-              // 如果是第一次尝试就路径错误，则 404
-              if (attempts === 1) throw new HttpError("404 Not Found", 404);
-              // 如果是重试中路径错误（理论上不应发生），则使用上一个错误
-              response = lastErrorResponse ?? new HttpError("404 Not Found during retry", 404);
-              break; // 跳出 switch
-          }
-
-          // --- 处理响应 ---
-          if (response.ok) {
-            console.log(`尝试 ${attempts} 成功 (状态码 ${response.status})`);
-            if (isRotating) {
-              // 成功，更新全局 keyIndex 指向当前成功的索引
-              keyIndex = currentKeyIndex % API_KEYS.length;
-              console.log(`轮询成功，全局 keyIndex 更新为 ${keyIndex}`);
-            }
-            return response; // 成功，返回响应
-          }
-
-          // --- 处理失败 ---
-          console.warn(`尝试 ${attempts} 失败 (状态码 ${response.status})`);
-          lastErrorResponse = response.clone(); // 保存错误响应副本
-
-          // 检查是否应该重试 (仅在轮询模式下对特定错误重试)
-          const shouldRetry = isRotating && [400, 429, 500].includes(response.status); // 仅重试 400, 429, 500
-
-          if (shouldRetry) {
-            currentKeyIndex++; // 递增索引，准备用下一个密钥重试
-            // 短暂延迟避免立即重试（可选）
-            // await new Promise(resolve => setTimeout(resolve, 100));
-          } else {
-            console.log(`非轮询模式或遇到不可重试错误 (状态码 ${response.status})，返回当前错误响应。`);
-            return response; // 不重试，直接返回当前错误响应
-          }
-
-        } catch (innerErr) {
-          // 捕获 handle... 函数内部或 assert 抛出的错误
-          console.error(`尝试 ${attempts} 时内部处理出错:`, innerErr);
-          const status = innerErr instanceof HttpError ? innerErr.status : 500;
-          lastErrorResponse = errHandler(innerErr, status); // 使用 errHandler 创建错误响应
-
-          // 检查是否应该重试 (仅在轮询模式下对特定错误重试)
-          const shouldRetryFromInnerError = isRotating && [400, 429, 500].includes(status);
-
-          if (shouldRetryFromInnerError) {
-            currentKeyIndex++; // 递增索引，准备用下一个密钥重试
-          } else {
-            console.log(`内部错误不可重试 (状态码 ${status}) 或非轮询模式，返回错误响应。`);
-            return lastErrorResponse; // 不重试，返回错误响应
-          }
-        }
-      } // end while loop
-
-      // 如果循环结束仍未成功
-      console.error(`所有 ${maxAttempts} 次尝试 (最多 3 轮) 均失败。返回最后记录的错误。`);
-      return lastErrorResponse ?? errHandler(new HttpError(`All API key attempts failed after ${maxAttempts} tries.`, 500));
-
+      switch (true) {
+        case pathname.endsWith("/chat/completions"):
+          assert(request.method === "POST");
+          // 不再传递 apiKey 给 handleCompletions
+          return handleCompletions(await request.json())
+            .catch(errHandler);
+        case pathname.endsWith("/embeddings"):
+          assert(request.method === "POST");
+           // 不再传递 apiKey 给 handleEmbeddings
+          return handleEmbeddings(await request.json())
+            .catch(errHandler);
+        case pathname.endsWith("/models"):
+          assert(request.method === "GET");
+           // 不再传递 apiKey 给 handleModels
+          return handleModels()
+            .catch(errHandler);
+        default:
+          throw new HttpError("404 Not Found", 404);
+      }
     } catch (err) {
-      // 捕获顶层错误 (如 new URL 失败)
       return errHandler(err);
     }
   }
@@ -266,15 +229,12 @@ const API_VERSION = "v1beta";
 
 // https://github.com/google-gemini/generative-ai-js/blob/cf223ff4a1ee5a2d944c53cddb8976136382bee6/src/requests/request.ts#L71
 const API_CLIENT = "genai-js/0.21.0"; // npm view @google/generative-ai version
-const makeHeaders = (apiKey, more) => ({
-  "x-goog-api-client": API_CLIENT,
-  ...(apiKey && { "x-goog-api-key": apiKey }),
-  ...more
-});
 
-async function handleModels (apiKey) {
-  const response = await fetch(`${BASE_URL}/${API_VERSION}/models`, {
-    headers: makeHeaders(apiKey),
+async function handleModels (/* apiKey */) {
+  // 使用 fetchWithRetry 替换 fetch
+  const response = await fetchWithRetry(`${BASE_URL}/${API_VERSION}/models`, {
+    // headers 中不再需要手动添加 apiKey
+    headers: { "x-goog-api-client": API_CLIENT },
   });
   let { body } = response;
   if (response.ok) {
@@ -293,23 +253,30 @@ async function handleModels (apiKey) {
 }
 
 const DEFAULT_EMBEDDINGS_MODEL = "text-embedding-004";
-async function handleEmbeddings (req, apiKey) {
+async function handleEmbeddings (req/* , apiKey */) {
   if (typeof req.model !== "string") {
     throw new HttpError("model is not specified", 400);
-  }
-  if (!Array.isArray(req.input)) {
-    req.input = [ req.input ];
   }
   let model;
   if (req.model.startsWith("models/")) {
     model = req.model;
   } else {
-    req.model = DEFAULT_EMBEDDINGS_MODEL;
+    if (!req.model.startsWith("gemini-")) {
+      req.model = DEFAULT_EMBEDDINGS_MODEL;
+    }
     model = "models/" + req.model;
   }
-  const response = await fetch(`${BASE_URL}/${API_VERSION}/${model}:batchEmbedContents`, {
+  if (!Array.isArray(req.input)) {
+    req.input = [ req.input ];
+  }
+  // 使用 fetchWithRetry 替换 fetch
+  const response = await fetchWithRetry(`${BASE_URL}/${API_VERSION}/${model}:batchEmbedContents`, {
     method: "POST",
-    headers: makeHeaders(apiKey, { "Content-Type": "application/json" }),
+     // headers 中不再需要手动添加 apiKey
+    headers: {
+       "x-goog-api-client": API_CLIENT,
+       "Content-Type": "application/json"
+    },
     body: JSON.stringify({
       "requests": req.input.map(text => ({
         model,
@@ -335,7 +302,7 @@ async function handleEmbeddings (req, apiKey) {
 }
 
 const DEFAULT_MODEL = "gemini-2.0-flash";
-async function handleCompletions (req, apiKey) {
+async function handleCompletions (req/* , apiKey */) {
   let model = DEFAULT_MODEL;
   switch (true) {
     case typeof req.model !== "string":
@@ -348,48 +315,69 @@ async function handleCompletions (req, apiKey) {
     case req.model.startsWith("learnlm-"):
       model = req.model;
   }
-  let body = await transformRequest(req);
+  let bodyPayload = await transformRequest(req); // Renamed to avoid confusion with response body
   switch (true) {
     case model.endsWith(":search"):
       model = model.substring(0, model.length - 7);
       // eslint-disable-next-line no-fallthrough
     case req.model.endsWith("-search-preview"):
-      body.tools = body.tools || [];
-      body.tools.push({googleSearch: {}});
+      bodyPayload.tools = bodyPayload.tools || [];
+      bodyPayload.tools.push({googleSearch: {}});
   }
   const TASK = req.stream ? "streamGenerateContent" : "generateContent";
   let url = `${BASE_URL}/${API_VERSION}/models/${model}:${TASK}`;
   if (req.stream) { url += "?alt=sse"; }
-  const response = await fetch(url, {
+  // 使用 fetchWithRetry 替换 fetch
+  const response = await fetchWithRetry(url, {
     method: "POST",
-    headers: makeHeaders(apiKey, { "Content-Type": "application/json" }),
-    body: JSON.stringify(body),
+     // headers 中不再需要手动添加 apiKey
+    headers: {
+      "x-goog-api-client": API_CLIENT,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(bodyPayload),
   });
 
-  body = response.body;
+  // ... rest of the function remains the same, but use 'responseBody' for clarity ...
+  let responseBody = response.body; // Use a different variable name
   if (response.ok) {
-    let id = generateChatcmplId(); //"chatcmpl-8pMMaqXMK68B3nyDBrapTDrhkHBQK";
+    let id = "chatcmpl-" + generateId();
+    const shared = {};
     if (req.stream) {
-      body = response.body
+      responseBody = response.body
         .pipeThrough(new TextDecoderStream())
         .pipeThrough(new TransformStream({
           transform: parseStream,
           flush: parseStreamFlush,
           buffer: "",
+          shared,
         }))
         .pipeThrough(new TransformStream({
           transform: toOpenAiStream,
           flush: toOpenAiStreamFlush,
           streamIncludeUsage: req.stream_options?.include_usage,
           model, id, last: [],
+          shared,
         }))
         .pipeThrough(new TextEncoderStream());
     } else {
-      body = await response.text();
-      body = processCompletionsResponse(JSON.parse(body), model, id);
+      responseBody = await response.text(); // Read the text from the original response
+      try {
+        let parsedBody = JSON.parse(responseBody); // Parse the text
+        if (!parsedBody.candidates) {
+          throw new Error("Invalid completion object");
+        }
+         // Process the parsed body
+        responseBody = processCompletionsResponse(parsedBody, model, id);
+      } catch (err) {
+        console.error("Error parsing response:", err);
+        // Return the original text body if parsing fails
+        return new Response(responseBody, fixCors(response));
+      }
     }
   }
-  return new Response(body, fixCors(response));
+  // Return the potentially transformed responseBody
+  return new Response(responseBody, fixCors(response));
 }
 
 const adjustProps = (schemaPart) => {
@@ -493,52 +481,67 @@ const parseImg = async (url) => {
   };
 };
 
-const transformMsg = async ({ content, tool_calls, tool_call_id }, fnames) => {
-  const parts = [];
-  if (tool_call_id !== undefined) {
-    let response;
+const transformFnResponse = ({ content, tool_call_id }, parts) => {
+  if (!parts.calls) {
+    throw new HttpError("No function calls found in the previous message", 400);
+  }
+  let response;
+  try {
+    response = JSON.parse(content);
+  } catch (err) {
+    console.error("Error parsing function response content:", err);
+    throw new HttpError("Invalid function response: " + content, 400);
+  }
+  if (typeof response !== "object" || response === null || Array.isArray(response)) {
+    response = { result: response };
+  }
+  if (!tool_call_id) {
+    throw new HttpError("tool_call_id not specified", 400);
+  }
+  const { i, name } = parts.calls[tool_call_id] ?? {};
+  if (!name) {
+    throw new HttpError("Unknown tool_call_id: " + tool_call_id, 400);
+  }
+  if (parts[i]) {
+    throw new HttpError("Duplicated tool_call_id: " + tool_call_id, 400);
+  }
+  parts[i] = {
+    functionResponse: {
+      id: tool_call_id.startsWith("call_") ? null : tool_call_id,
+      name,
+      response,
+    }
+  };
+};
+
+const transformFnCalls = ({ tool_calls }) => {
+  const calls = {};
+  const parts = tool_calls.map(({ function: { arguments: argstr, name }, id, type }, i) => {
+    if (type !== "function") {
+      throw new HttpError(`Unsupported tool_call type: "${type}"`, 400);
+    }
+    let args;
     try {
-      response = JSON.parse(content);
+      args = JSON.parse(argstr);
     } catch (err) {
-      console.error("Error parsing function response content:", err);
-      throw new HttpError("Invalid function response: " + content, 400);
+      console.error("Error parsing function arguments:", err);
+      throw new HttpError("Invalid function arguments: " + argstr, 400);
     }
-    if (typeof response !== "object" || response === null || Array.isArray(response)) {
-      response = { result: response };
-    }
-    parts.push({
-      functionResponse: {
-        id: tool_call_id.startsWith("{") ? null : tool_call_id,
-        name: fnames[tool_call_id],
-        response,
+    calls[id] = {i, name};
+    return {
+      functionCall: {
+        id: id.startsWith("call_") ? null : id,
+        name,
+        args,
       }
-    });
-    return parts;
-  }
-  if (tool_calls) {
-    for (const tcall of tool_calls) {
-      if (tcall.type !== "function") {
-        throw new HttpError(`Unsupported tool_call type: "${tcall.type}"`, 400);
-      }
-      const { function: { arguments: argstr, name }, id } = tcall;
-      let args;
-      try {
-        args = JSON.parse(argstr);
-      } catch (err) {
-        console.error("Error parsing function arguments:", err);
-        throw new HttpError("Invalid function arguments: " + argstr, 400);
-      }
-      parts.push({
-        functionCall: {
-          id: id.startsWith("{") ? null : id,
-          name,
-          args,
-        }
-      });
-      fnames[id] = name;
-    }
-    return parts;
-  }
+    };
+  });
+  parts.calls = calls;
+  return parts;
+};
+
+const transformMsg = async ({ content }) => {
+  const parts = [];
   if (!Array.isArray(content)) {
     // system, user: string
     // assistant: string or null (Required unless tool_calls is specified.)
@@ -579,31 +582,41 @@ const transformMessages = async (messages) => {
   if (!messages) { return; }
   const contents = [];
   let system_instruction;
-  const fnames = {}; // cache function names by tool_call_id between messages
   for (const item of messages) {
-    if (item.role === "system") {
-      system_instruction = { parts: await transformMsg(item) };
-    } else {
-      if (item.role === "assistant") {
-        item.role = "model";
-      } else if (item.role === "tool") {
-        const prev = contents[contents.length - 1];
-        if (prev?.role === "function") {
-          prev.parts.push(...await transformMsg(item, fnames));
-          continue;
+    switch (item.role) {
+      case "system":
+        system_instruction = { parts: await transformMsg(item) };
+        continue;
+      case "tool":
+        // eslint-disable-next-line no-case-declarations
+        let { role, parts } = contents[contents.length - 1] ?? {};
+        if (role !== "function") {
+          const calls = parts?.calls;
+          parts = []; parts.calls = calls;
+          contents.push({
+            role: "function", // ignored
+            parts
+          });
         }
-        item.role = "function"; // ignored
-      } else if (item.role !== "user") {
-        throw HttpError(`Unknown message role: "${item.role}"`, 400);
-      }
-      contents.push({
-        role: item.role,
-        parts: await transformMsg(item, fnames)
-      });
+        transformFnResponse(item, parts);
+        continue;
+      case "assistant":
+        item.role = "model";
+        break;
+      case "user":
+        break;
+      default:
+        throw new HttpError(`Unknown message role: "${item.role}"`, 400);
     }
+    contents.push({
+      role: item.role,
+      parts: item.tool_calls ? transformFnCalls(item) : await transformMsg(item)
+    });
   }
-  if (system_instruction && contents.length === 0) {
-    contents.push({ role: "model", parts: { text: " " } });
+  if (system_instruction) {
+    if (!contents[0]?.parts.some(part => part.text)) {
+      contents.unshift({ role: "user", parts: { text: " " } });
+    }
   }
   //console.info(JSON.stringify(contents, 2));
   return { system_instruction, contents };
@@ -637,10 +650,10 @@ const transformRequest = async (req) => ({
   ...transformTools(req),
 });
 
-const generateChatcmplId = () => {
+const generateId = () => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const randomChar = () => characters[Math.floor(Math.random() * characters.length)];
-  return "chatcmpl-" + Array.from({ length: 29 }, randomChar).join("");
+  return Array.from({ length: 29 }, randomChar).join("");
 };
 
 const reasonsMap = { //https://ai.google.dev/api/rest/v1/GenerateContentResponse#finishreason
@@ -659,7 +672,7 @@ const transformCandidates = (key, cand) => {
       const fc = part.functionCall;
       message.tool_calls = message.tool_calls ?? [];
       message.tool_calls.push({
-        id: fc.id ?? `{${fc.name}}`,
+        id: fc.id ?? "call_" + generateId(),
         type: "function",
         function: {
           name: fc.name,
@@ -675,7 +688,8 @@ const transformCandidates = (key, cand) => {
     index: cand.index || 0, // 0-index is absent in new -002 models response
     [key]: message,
     logprobs: null,
-    finish_reason: reasonsMap[cand.finishReason] || cand.finishReason,
+    finish_reason: message.tool_calls ? "tool_calls" : reasonsMap[cand.finishReason] || cand.finishReason,
+    //original_finish_reason: cand.finishReason,
   };
 };
 const transformCandidatesMessage = transformCandidates.bind(null, "message");
@@ -687,16 +701,39 @@ const transformUsage = (data) => ({
   total_tokens: data.totalTokenCount
 });
 
+const checkPromptBlock = (choices, promptFeedback, key) => {
+  if (choices.length) { return; }
+  if (promptFeedback?.blockReason) {
+    console.log("Prompt block reason:", promptFeedback.blockReason);
+    if (promptFeedback.blockReason === "SAFETY") {
+      promptFeedback.safetyRatings
+        .filter(r => r.blocked)
+        .forEach(r => console.log(r));
+    }
+    choices.push({
+      index: 0,
+      [key]: null,
+      finish_reason: "content_filter",
+      //original_finish_reason: data.promptFeedback.blockReason,
+    });
+  }
+  return true;
+};
+
 const processCompletionsResponse = (data, model, id) => {
-  return JSON.stringify({
+  const obj = {
     id,
     choices: data.candidates.map(transformCandidatesMessage),
     created: Math.floor(Date.now()/1000),
-    model,
+    model: data.modelVersion ?? model,
     //system_fingerprint: "fp_69829325d0",
     object: "chat.completion",
-    usage: transformUsage(data.usageMetadata),
-  });
+    usage: data.usageMetadata && transformUsage(data.usageMetadata),
+  };
+  if (obj.choices.length === 0 ) {
+    checkPromptBlock(obj.choices, data.promptFeedback, "message");
+  }
+  return JSON.stringify(obj);
 };
 
 const responseLineRE = /^data: (.*)(?:\n\n|\r\r|\r\n\r\n)/;
@@ -713,75 +750,67 @@ function parseStreamFlush (controller) {
   if (this.buffer) {
     console.error("Invalid data:", this.buffer);
     controller.enqueue(this.buffer);
+    this.shared.is_buffers_rest = true;
   }
 }
 
-function transformResponseStream (data, special) {
-  const item = transformCandidatesDelta(data.candidates[0]);
-  switch (special) {
-    case "stop":
-      if (item.delta.tool_calls) {
-        item.finish_reason = "tool_calls";
-      }
-      item.delta = {};
-      break;
-    case "first":
-      item.finish_reason = null;
-      item.delta.content = "";
-      delete item.delta.tool_calls;
-      break;
-    default:
-      item.finish_reason = null;
-      delete item.delta.role;
-  }
-  const output = {
-    id: this.id,
-    choices: [item],
-    created: Math.floor(Date.now()/1000),
-    model: this.model,
-    //system_fingerprint: "fp_69829325d0",
-    object: "chat.completion.chunk",
-  };
-  // 检查是否是流结束且需要包含 usage
-  if (data.usageMetadata && this.streamIncludeUsage) {
-    // 修复：使用 special 参数判断是否是停止帧
-    output.usage = (special === "stop") ? transformUsage(data.usageMetadata) : null;
-  }
-  return "data: " + JSON.stringify(output) + delimiter;
-}
 const delimiter = "\n\n";
+const sseline = (obj) => {
+  obj.created = Math.floor(Date.now()/1000);
+  return "data: " + JSON.stringify(obj) + delimiter;
+};
 function toOpenAiStream (line, controller) {
-  const transform = transformResponseStream.bind(this);
   let data;
   try {
     data = JSON.parse(line);
+    if (!data.candidates) {
+      throw new Error("Invalid completion chunk object");
+    }
   } catch (err) {
-    console.error(line);
-    console.error(err);
-    const length = this.last.length || 1; // at least 1 error msg
-    const candidates = Array.from({ length }, (_, index) => ({
-      finishReason: "error",
-      content: { parts: [{ text: err }] },
-      index,
-    }));
-    data = { candidates };
+    console.error("Error parsing response:", err);
+    if (!this.shared.is_buffers_rest) { line =+ delimiter; }
+    controller.enqueue(line); // output as is
+    return;
   }
-  const cand = data.candidates[0];
+  const obj = {
+    id: this.id,
+    choices: data.candidates.map(transformCandidatesDelta),
+    //created: Math.floor(Date.now()/1000),
+    model: data.modelVersion ?? this.model,
+    //system_fingerprint: "fp_69829325d0",
+    object: "chat.completion.chunk",
+    usage: data.usageMetadata && this.streamIncludeUsage ? null : undefined,
+  };
+  if (checkPromptBlock(obj.choices, data.promptFeedback, "delta")) {
+    controller.enqueue(sseline(obj));
+    return;
+  }
   console.assert(data.candidates.length === 1, "Unexpected candidates count: %d", data.candidates.length);
+  const cand = obj.choices[0];
   cand.index = cand.index || 0; // absent in new -002 models response
-  if (!this.last[cand.index]) {
-    controller.enqueue(transform(data, "first"));
+  const finish_reason = cand.finish_reason;
+  cand.finish_reason = null;
+  if (!this.last[cand.index]) { // first
+    controller.enqueue(sseline({
+      ...obj,
+      choices: [{ ...cand, tool_calls: undefined, delta: { role: "assistant", content: "" } }],
+    }));
   }
-  this.last[cand.index] = data;
-  if (cand.content) { // prevent empty data (e.g. when MAX_TOKENS)
-    controller.enqueue(transform(data));
+  delete cand.delta.role;
+  if ("content" in cand.delta) { // prevent empty data (e.g. when MAX_TOKENS)
+    controller.enqueue(sseline(obj));
   }
+  cand.finish_reason = finish_reason;
+  if (data.usageMetadata && this.streamIncludeUsage) {
+    obj.usage = transformUsage(data.usageMetadata);
+  }
+  cand.delta = {};
+  this.last[cand.index] = obj;
 }
 function toOpenAiStreamFlush (controller) {
-  const transform = transformResponseStream.bind(this);
   if (this.last.length > 0) {
-    for (const data of this.last) {
-      controller.enqueue(transform(data, "stop"));
+    for (const obj of this.last) {
+      controller.enqueue(sseline(obj));
     }
     controller.enqueue("data: [DONE]" + delimiter);
   }
