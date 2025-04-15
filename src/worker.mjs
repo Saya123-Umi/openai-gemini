@@ -1,6 +1,6 @@
 好的，这是替换了 `API_KEYS` 数组内容后的完整代码：
 
-```javascript
+javascript
 import { Buffer } from "node:buffer";
 
 // API 密钥库
@@ -789,4 +789,4 @@ function toOpenAiStreamFlush (controller) {
     controller.enqueue("data: [DONE]" + delimiter);
   }
 }
-```
+
