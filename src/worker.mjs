@@ -1,6 +1,3 @@
-
-
-javascript
 import { Buffer } from "node:buffer";
 
 // API 密钥库
@@ -789,4 +786,3 @@ function toOpenAiStreamFlush (controller) {
     controller.enqueue("data: [DONE]" + delimiter);
   }
 }
-
