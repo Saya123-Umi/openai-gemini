@@ -144,7 +144,7 @@ async function fetchWithRetry (url, options) {
   const totalKeys = API_KEYS.length;
 
   while (round < MAX_ROUNDS) {
-    const apiKey = API_KEYS[currentApiKeyIndex];
+    const apiKey = API_KEYS[0]; // 总是使用第一个密钥
     const displayKey = apiKey.slice(-6);
     attempts++;
 
@@ -174,13 +174,11 @@ async function fetchWithRetry (url, options) {
       // 检查是否是需要切换密钥的错误
       if ([400, 403, 429, 500].includes(response.status)) {
         console.log(`密钥 ...${displayKey} 失败，尝试下一个...`);
-        currentApiKeyIndex = (currentApiKeyIndex + 1);
-        if (currentApiKeyIndex >= totalKeys) {
-            currentApiKeyIndex = 0; // 回到第一个密钥
+        API_KEYS.push(API_KEYS.shift()); // 将第一个密钥移动到末尾
+        if (round < MAX_ROUNDS) {
             round++; // 完成一轮
             console.log(`完成第 ${round} 轮轮询`);
         }
-        // 不需要显式 continue，循环会自动进行下一次迭代
       } else {
         // 对于其他非预期错误，直接抛出，不再重试
         console.error(`发生不可重试错误: ${response.status}`);
@@ -189,12 +187,11 @@ async function fetchWithRetry (url, options) {
     } catch (error) {
       // 网络错误或其他 fetch 异常
       console.error(`Fetch 异常: ${error.message}, 密钥: ...${displayKey}, 尝试下一个...`);
-      currentApiKeyIndex = (currentApiKeyIndex + 1);
-        if (currentApiKeyIndex >= totalKeys) {
-            currentApiKeyIndex = 0; // 回到第一个密钥
-            round++; // 完成一轮
-            console.log(`完成第 ${round} 轮轮询`);
-        }
+      API_KEYS.push(API_KEYS.shift()); // 将第一个密钥移动到末尾
+      if (round < MAX_ROUNDS) {
+          round++; // 完成一轮
+          console.log(`完成第 ${round} 轮轮询`);
+      }
       // 检查是否是 HttpError，如果是则可能是上一步抛出的不可重试错误
       if (error instanceof HttpError && ![400, 403, 429, 500].includes(error.status)) {
           throw error; // 如果不是需要切换密钥的 HttpError，则重新抛出
